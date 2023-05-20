@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_integrador3/main.dart';
+import 'package:projeto_integrador3/waiting.dart';
 
 class SecondPage extends StatelessWidget {
   const SecondPage({super.key});
@@ -10,7 +12,14 @@ class SecondPage extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.redAccent,
-          leading: const Icon(Icons.arrow_back),
+          leading: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyApp()),
+                );
+              },
+              icon: const Icon(Icons.arrow_back)),
           title: const Text(
             title,
             style: TextStyle(
@@ -89,7 +98,12 @@ class _MyCustomFormState extends State<MyCustomForm> {
               child: ElevatedButton(
                 style:
                     ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoadingPage()));
+                },
                 child: const Text(
                   'Solicitar',
                   style: TextStyle(fontSize: 32.0),

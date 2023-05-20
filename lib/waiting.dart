@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_integrador3/form.dart';
+import 'package:projeto_integrador3/main.dart';
 
-/// Flutter code sample for [CircularProgressIndicator].
-
-void main() => runApp(const ProgressIndicatorApp());
-
-class ProgressIndicatorApp extends StatelessWidget {
-  const ProgressIndicatorApp({super.key});
+class LoadingPage extends StatelessWidget {
+  const LoadingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +50,15 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const Icon(Icons.arrow_back),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SecondPage()),
+            );
+          },
+        ),
         backgroundColor: Colors.redAccent,
         title: const Text('Emergencia'),
       ),
