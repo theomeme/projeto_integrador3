@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "596848845488",
+    "project_id": "teethkids-49f4b",
+    "storage_bucket": "teethkids-49f4b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596848845488:android:4d9626ec261c03f8875175",
+        "android_client_info": {
+          "package_name": "com.example.projeto_integrador3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "596848845488-ennge8g1jfde7lom7idk9nb9u235ho1j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjNYPhbxOwS9_HSr3d56QGr7IGwdSkcE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "596848845488-ennge8g1jfde7lom7idk9nb9u235ho1j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596848845488:android:d9f25b604604fc24875175",
+        "android_client_info": {
+          "package_name": "com.example.teethkids"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "596848845488-u8gvdnjh933tg6hnh0imcgeauusmn0p3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.teethkids",
+            "certificate_hash": "ca3da2c2a034ce1c0411e3dd3461bc7a02d461c8"
+          }
+        },
+        {
+          "client_id": "596848845488-ennge8g1jfde7lom7idk9nb9u235ho1j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjNYPhbxOwS9_HSr3d56QGr7IGwdSkcE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "596848845488-ennge8g1jfde7lom7idk9nb9u235ho1j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
