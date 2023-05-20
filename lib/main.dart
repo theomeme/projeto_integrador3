@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/form.dart';
+import 'package:projeto_integrador3/waiting.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProgressIndicatorApp());
 }
 
 class MyApp extends StatelessWidget {
