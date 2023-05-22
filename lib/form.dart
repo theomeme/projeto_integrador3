@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/main.dart';
 import 'package:projeto_integrador3/waiting.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class SecondPage extends StatelessWidget {
   const SecondPage({super.key});
@@ -42,6 +44,8 @@ class MyCustomForm extends StatefulWidget {
 }
 
 class _MyCustomFormState extends State<MyCustomForm> {
+  ImagePicker imagePicker = ImagePicker();
+  File? imagemSelecionada;
   final _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
@@ -64,7 +68,9 @@ class _MyCustomFormState extends State<MyCustomForm> {
                   Icons.camera_alt_outlined,
                   size: 36,
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  getImageFromCamera();
+                },
               ),
             ),
             const Padding(
@@ -112,5 +118,15 @@ class _MyCustomFormState extends State<MyCustomForm> {
             )
           ],
         ));
+  }
+
+  getImageFromCamera() async {
+    final XFile? imagemTemporaria =
+        await imagePicker.pickImage(source: ImageSource.camera);
+    if (imagemTemporaria != null) {
+      setState(() {
+        imagemSelecionada = File(imagemTemporaria.path);
+      });
+    }
   }
 }
