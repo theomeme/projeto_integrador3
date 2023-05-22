@@ -1,137 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/main.dart';
 import 'package:projeto_integrador3/waiting.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 
-class SecondPage extends StatelessWidget {
-  const SecondPage({super.key});
+class NewFormPage extends StatelessWidget {
+  const NewFormPage({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    const title = 'Emergencia';
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.redAccent,
-          leading: IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MyApp()),
-                );
-              },
-              icon: const Icon(Icons.arrow_back)),
-          title: const Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22.0,
-            ),
-          ),
-        ),
-        body: const MyCustomForm(),
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
+        useMaterial3: true,
       ),
+      home: const NewForm(title: 'Emergencia'),
     );
   }
 }
 
-class MyCustomForm extends StatefulWidget {
-  const MyCustomForm({super.key});
+class NewForm extends StatefulWidget {
+  const NewForm({super.key, required this.title});
+
+  final String title;
 
   @override
-  State<MyCustomForm> createState() => _MyCustomFormState();
+  State<NewForm> createState() => _MyHomePageState();
 }
 
-class _MyCustomFormState extends State<MyCustomForm> {
-  ImagePicker imagePicker = ImagePicker();
-  File? imagemSelecionada;
-  final _formKey = GlobalKey<FormState>();
+class _MyHomePageState extends State<NewForm> {
+  final nameController = TextEditingController();
+  final numberController = TextEditingController();
+  int _activeStepIndex = 0;
+
+  List<Step> stepList() => [
+        Step(
+            state:
+                _activeStepIndex <= 0 ? StepState.editing : StepState.complete,
+            isActive: _activeStepIndex >= 0,
+            title: const Text('Fotos'),
+            content: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Primeiro precisamos de uma foto da area acidentada...',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.camera_alt),
+                    const SizedBox(
+                      width: 16,
+                    ),
+                    TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          'Enviar foto',
+                          style: TextStyle(fontSize: 20),
+                        ))
+                  ],
+                )
+              ],
+            )),
+        Step(
+          state: _activeStepIndex <= 1 ? StepState.editing : StepState.complete,
+          isActive: _activeStepIndex >= 1,
+          title: const Text('Conta'),
+          content: Column(
+            children: [
+              const Text(
+                'Agora precisamos de alguns dados...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(), hintText: 'Nome completo'),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: numberController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(), hintText: '+55 99999-9999'),
+                ),
+              )
+            ],
+          ),
+        ),
+        Step(
+          state: _activeStepIndex <= 2 ? StepState.editing : StepState.complete,
+          isActive: _activeStepIndex >= 2,
+          title: const Text('Confirmacao'),
+          content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Por favor confirme se os dados estao corretos...',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const Text(
+                  'Nome completo:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${nameController.text}',
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const Text(
+                  'Numero:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${numberController.text}',
+                  style: const TextStyle(fontSize: 20),
+                )
+              ]),
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
-    return Form(
-        key: _formKey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Text(
-                'Precisamos de alguns dados:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.camera_alt_outlined,
-                  size: 36,
-                ),
-                onPressed: () {
-                  getImageFromCamera();
-                },
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Foto da area acidentada',
-                style: TextStyle(fontSize: 20),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Numero de telefone',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Nome do responsavel',
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoadingPage()));
-                },
-                child: const Text(
-                  'Solicitar',
-                  style: TextStyle(fontSize: 32.0),
-                ),
-              ),
-            )
-          ],
-        ));
-  }
-
-  getImageFromCamera() async {
-    final storageRef = FirebaseStorage.instance.ref();
-    final XFile? imagemTemporaria =
-        await imagePicker.pickImage(source: ImageSource.camera);
-    if (imagemTemporaria != null) {
-      setState(() {
-        imagemSelecionada = File(imagemTemporaria.path);
-      });
-    }
-    Reference referenceDirImage =
-        storageRef.child('/EMERGENCIES/PHOTOS/acidente');
-    referenceDirImage.putFile(File(imagemSelecionada!.path));
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Stepper(
+        type: StepperType.horizontal,
+        currentStep: _activeStepIndex,
+        steps: stepList(),
+        onStepContinue: () {
+          if (_activeStepIndex < (stepList().length - 1)) {
+            _activeStepIndex++;
+          } else {
+            //TODO: Implementar o envio pro fire
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoadingPage()),
+            );
+          }
+          setState(() {});
+        },
+        onStepCancel: () {
+          if (_activeStepIndex == 0) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const MyApp()));
+          } else {
+            _activeStepIndex--;
+            setState(() {});
+          }
+        },
+      ),
+    );
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_integrador3/form.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:projeto_integrador3/form.dart';
+import 'package:projeto_integrador3/old_form.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,44 +23,41 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.redAccent,
-          title: const Center(
-            child: Text(
-              'TeethKids',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0),
+          appBar: AppBar(
+            backgroundColor: Colors.redAccent,
+            title: const Center(
+              child: Text(
+                'TeethKids',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0),
+              ),
             ),
           ),
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SecondPage()),
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.warning,
-                    color: Colors.red,
-                    size: 36,
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const NewFormPage()),
+                      );
+                    },
+                    child: const Text(
+                      'SOLICITAR\nEMERGENCIA',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                          color: Colors.red),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const Text(
-              'Pedir socorro!',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-            )
-          ],
-        ),
-      ),
+                ],
+              )
+            ],
+          )),
     );
   }
 }

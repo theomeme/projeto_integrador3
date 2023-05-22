@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/andamento.dart';
-import 'package:projeto_integrador3/form.dart';
+import 'package:projeto_integrador3/old_form.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoadingPage extends StatelessWidget {
