@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_integrador3/andamento.dart';
 import 'package:projeto_integrador3/form.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -90,15 +91,14 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
               stream: _responsesStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Text('Alguma coisa deu errado');
+                  return const Text('Alguma coisa deu errado');
                 }
 
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Text('Carregando informações');
+                  return const Text('Carregando informações');
                 }
 
                 var docs = snapshot.data!.docs;
-                ;
 
                 return SizedBox(
                   height: 550,
@@ -113,7 +113,14 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
                           ),
                           leading: const Icon(Icons.person),
                           trailing: IconButton(
-                              icon: const Icon(Icons.add), onPressed: () {}),
+                              icon: const Icon(Icons.add),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const Andamento()));
+                              }),
                         );
                       }),
                 );
