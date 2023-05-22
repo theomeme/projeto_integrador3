@@ -3,6 +3,7 @@ import 'package:projeto_integrador3/main.dart';
 import 'package:projeto_integrador3/waiting.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SecondPage extends StatelessWidget {
   const SecondPage({super.key});
@@ -121,6 +122,7 @@ class _MyCustomFormState extends State<MyCustomForm> {
   }
 
   getImageFromCamera() async {
+    final storageRef = FirebaseStorage.instance.ref();
     final XFile? imagemTemporaria =
         await imagePicker.pickImage(source: ImageSource.camera);
     if (imagemTemporaria != null) {
@@ -128,5 +130,8 @@ class _MyCustomFormState extends State<MyCustomForm> {
         imagemSelecionada = File(imagemTemporaria.path);
       });
     }
+    Reference referenceDirImage =
+        storageRef.child('/EMERGENCIES/PHOTOS/acidente');
+    referenceDirImage.putFile(File(imagemSelecionada!.path));
   }
 }
