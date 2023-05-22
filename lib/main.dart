@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:projeto_integrador3/splash/splash_page.dart';
 import 'package:projeto_integrador3/form.dart';
 
 Future<void> main() async {

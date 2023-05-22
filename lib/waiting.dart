@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/form.dart';
-import 'package:projeto_integrador3/main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoadingPage extends StatelessWidget {
   const LoadingPage({super.key});
@@ -25,6 +25,13 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
     with TickerProviderStateMixin {
   late AnimationController controller;
   bool determinate = false;
+  CollectionReference responses =
+      FirebaseFirestore.instance.collection('responses');
+  final Stream<QuerySnapshot> _responsesStream = FirebaseFirestore.instance
+      .collection('responses')
+      .where('status', isEqualTo: 'ACEITADO')
+      .limit(5)
+      .snapshots();
 
   @override
   void initState() {
@@ -65,7 +72,7 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
       body: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             const Text(
               'Estamos procurando profissionais para te ajudar...',
@@ -79,33 +86,39 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
               semanticsLabel: 'Circular progress indicator',
             ),
             const SizedBox(height: 10),
-            // Row(
-            //   children: <Widget>[
-            //     const Expanded(
-            //       child: Text(
-            //         'Parar de procurar',
-            //         style: TextStyle(fontWeight: FontWeight.bold),
-            //       ),
-            //     ),
-            //     Switch(
-            //       value: determinate,
-            //       onChanged: (bool value) {
-            //         setState(
-            //           () {
-            //             determinate = value;
-            //             if (determinate) {
-            //               controller.stop();
-            //             } else {
-            //               controller
-            //                 ..forward(from: controller.value)
-            //                 ..repeat();
-            //             }
-            //           },
-            //         );
-            //       },
-            //     ),
-            //   ],
-            // ),
+            StreamBuilder<QuerySnapshot>(
+              stream: _responsesStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Alguma coisa deu errado');
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Text('Carregando informações');
+                }
+
+                var docs = snapshot.data!.docs;
+                ;
+
+                return SizedBox(
+                  height: 550,
+                  child: ListView.builder(
+                      itemCount: docs.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(docs[index]['professional']),
+                          subtitle: const Text(
+                            'Dentista achado!',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          leading: const Icon(Icons.person),
+                          trailing: IconButton(
+                              icon: const Icon(Icons.add), onPressed: () {}),
+                        );
+                      }),
+                );
+              },
+            )
           ],
         ),
       ),
