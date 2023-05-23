@@ -38,6 +38,7 @@ class _MyHomePageState extends State<NewForm> {
   final numberController = TextEditingController();
   int _activeStepIndex = 0;
   String imageUrl = '';
+  double _uploadProgress = 0.0;
 
   List<Step> stepList() => [
         Step(
@@ -59,21 +60,42 @@ class _MyHomePageState extends State<NewForm> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.camera_alt),
-                      onPressed: () {},
+                      onPressed: () {
+                        getImageFromCamera();
+                      },
                     ),
                     const SizedBox(
                       width: 16,
                     ),
                     TextButton(
-                        onPressed: () {
-                          getImageFromCamera();
-                        },
-                        child: const Text(
-                          'Enviar foto',
-                          style: TextStyle(fontSize: 20),
-                        )),
+                      onPressed: () {
+                        uploadFile();
+                      },
+                      child: const Text(
+                        'Enviar foto',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
                   ],
                 ),
+                const SizedBox(
+                  height: 15,
+                ),
+                LinearProgressIndicator(
+                  value: _uploadProgress,
+                  minHeight: 10,
+                  backgroundColor: Colors.grey,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                ),
+                const SizedBox(height: 8),
+                if (_uploadProgress == 1)
+                  const Text(
+                    'Upload concluído!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
               ],
             )),
         Step(
@@ -178,9 +200,6 @@ class _MyHomePageState extends State<NewForm> {
   }
 
   getImageFromCamera() async {
-    final storageRef = FirebaseStorage.instance.ref();
-    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
-
     final XFile? imagemTemporaria =
         await imagePicker.pickImage(source: ImageSource.camera);
     if (imagemTemporaria != null) {
@@ -189,41 +208,30 @@ class _MyHomePageState extends State<NewForm> {
       });
     }
     print(imagemSelecionada!.path);
-
-    Reference referenceDirImage =
-        storageRef.child('/EMERGENCIES/PHOTOS/$uniqueFileName');
-    referenceDirImage.putFile(File(imagemSelecionada!.path));
-    imageUrl = await referenceDirImage.getDownloadURL();
   }
 
-  uploadTask() {
+  uploadFile() {
     String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
     final storageRef = FirebaseStorage.instance.ref();
-    final uploadTask = storageRef
-        .child("EMERGENCIES/PHOTOS/$uniqueFileName")
-        .putFile(File(imagemSelecionada!.path));
+    final imageRef = storageRef.child('EMERGENCIES/PHOTOS/$uniqueFileName.jpg');
+    final uploadTask = imageRef.putFile(File(imagemSelecionada!.path));
 
-    uploadTask.snapshotEvents.listen((TaskSnapshot taskSnapshot) {
-      switch (taskSnapshot.state) {
-        case TaskState.running:
-          final progress =
-              100.0 * (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
-          print("Upload is $progress% complete.");
-          break;
-        case TaskState.paused:
-          print("Upload is paused.");
-          break;
-        case TaskState.canceled:
-          print("Upload was canceled");
-          break;
-        case TaskState.error:
-          // Handle unsuccessful uploads
-          break;
-        case TaskState.success:
-          // Handle successful uploads on complete
-          // ...
-          break;
-      }
+    uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+      setState(() {
+        _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
+      });
+    });
+
+    uploadTask.whenComplete(() {
+      imageRef.getDownloadURL().then((url) {
+        // Aqui está a URL de download do arquivo
+        String downloadUrl = url.toString();
+        print("URL de download: $downloadUrl");
+        // Você pode fazer o que quiser com a URL de download aqui
+      }).catchError((error) {
+        // Manipule erros ao obter a URL de download
+        print("Erro ao obter a URL de download: $error");
+      });
     });
   }
 }

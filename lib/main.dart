@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/form.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:projeto_integrador3/old_form.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
