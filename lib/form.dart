@@ -42,6 +42,8 @@ class _MyHomePageState extends State<NewForm> {
   CollectionReference nomes =
       FirebaseFirestore.instance.collection('emergencies');
 
+  String downloadUrl = '';
+
   List<Step> stepList() => [
         Step(
             state:
@@ -71,7 +73,32 @@ class _MyHomePageState extends State<NewForm> {
                     ),
                     TextButton(
                       onPressed: () {
-                        uploadFile();
+                        String uniqueFileName =
+                            DateTime.now().millisecondsSinceEpoch.toString();
+                        final storageRef = FirebaseStorage.instance.ref();
+                        final imageRef = storageRef
+                            .child('EMERGENCIES/PHOTOS/$uniqueFileName.jpg');
+                        final uploadTask =
+                            imageRef.putFile(File(imagemSelecionada!.path));
+
+                        uploadTask.snapshotEvents
+                            .listen((TaskSnapshot snapshot) {
+                          setState(() {
+                            _uploadProgress =
+                                snapshot.bytesTransferred / snapshot.totalBytes;
+                          });
+                        });
+
+                        uploadTask.whenComplete(() {
+                          imageRef.getDownloadURL().then((url) {
+                            // Aqui está a URL de download do arquivo
+                            downloadUrl = url.toString();
+                            print("URL = $downloadUrl");
+                          }).catchError((error) {
+                            // Manipule erros ao obter a URL de download
+                            print("Erro ao obter a URL de download: $error");
+                          });
+                        });
                       },
                       child: const Text(
                         'Enviar foto',
@@ -87,7 +114,7 @@ class _MyHomePageState extends State<NewForm> {
                   value: _uploadProgress,
                   minHeight: 10,
                   backgroundColor: Colors.grey,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
                 ),
                 const SizedBox(height: 8),
                 if (_uploadProgress == 1)
@@ -167,9 +194,9 @@ class _MyHomePageState extends State<NewForm> {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> adicionarNome(String nome, String phone) {
+    Future<void> adicionarNome(String nome, String phone, String url) {
       return nomes
-          .add({'name': nome, 'phone': phone, 'status': 'draft'})
+          .add({'name': nome, 'phone': phone, 'photos': url, 'status': 'draft'})
           // ignore: avoid_print
           .then((value) => print("Emergencia adicionada"))
           // ignore: avoid_print
@@ -189,7 +216,8 @@ class _MyHomePageState extends State<NewForm> {
           if (_activeStepIndex < (stepList().length - 1)) {
             _activeStepIndex++;
           } else {
-            adicionarNome(nameController.text, numberController.text);
+            adicionarNome(
+                nameController.text, numberController.text, downloadUrl);
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const LoadingPage()),
@@ -219,29 +247,5 @@ class _MyHomePageState extends State<NewForm> {
       });
     }
     print(imagemSelecionada!.path);
-  }
-
-  uploadFile() {
-    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
-    final storageRef = FirebaseStorage.instance.ref();
-    final imageRef = storageRef.child('EMERGENCIES/PHOTOS/$uniqueFileName.jpg');
-    final uploadTask = imageRef.putFile(File(imagemSelecionada!.path));
-
-    uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-      setState(() {
-        _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
-      });
-    });
-
-    uploadTask.whenComplete(() {
-      imageRef.getDownloadURL().then((url) {
-        // Aqui está a URL de download do arquivo
-        String downloadUrl = url.toString();
-        print("URL = $downloadUrl");
-      }).catchError((error) {
-        // Manipule erros ao obter a URL de download
-        print("Erro ao obter a URL de download: $error");
-      });
-    });
   }
 }
