@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/main.dart';
 import 'package:projeto_integrador3/waiting.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class NewFormPage extends StatelessWidget {
   const NewFormPage({super.key});
@@ -29,9 +32,12 @@ class NewForm extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<NewForm> {
+  ImagePicker imagePicker = ImagePicker();
+  File? imagemSelecionada;
   final nameController = TextEditingController();
   final numberController = TextEditingController();
   int _activeStepIndex = 0;
+  String imageUrl = '';
 
   List<Step> stepList() => [
         Step(
@@ -51,18 +57,23 @@ class _MyHomePageState extends State<NewForm> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.camera_alt),
+                    IconButton(
+                      icon: const Icon(Icons.camera_alt),
+                      onPressed: () {},
+                    ),
                     const SizedBox(
                       width: 16,
                     ),
                     TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          getImageFromCamera();
+                        },
                         child: const Text(
                           'Enviar foto',
                           style: TextStyle(fontSize: 20),
-                        ))
+                        )),
                   ],
-                )
+                ),
               ],
             )),
         Step(
@@ -164,5 +175,55 @@ class _MyHomePageState extends State<NewForm> {
         },
       ),
     );
+  }
+
+  getImageFromCamera() async {
+    final storageRef = FirebaseStorage.instance.ref();
+    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+    final XFile? imagemTemporaria =
+        await imagePicker.pickImage(source: ImageSource.camera);
+    if (imagemTemporaria != null) {
+      setState(() {
+        imagemSelecionada = File(imagemTemporaria.path);
+      });
+    }
+    print(imagemSelecionada!.path);
+
+    Reference referenceDirImage =
+        storageRef.child('/EMERGENCIES/PHOTOS/$uniqueFileName');
+    referenceDirImage.putFile(File(imagemSelecionada!.path));
+    imageUrl = await referenceDirImage.getDownloadURL();
+  }
+
+  uploadTask() {
+    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
+    final storageRef = FirebaseStorage.instance.ref();
+    final uploadTask = storageRef
+        .child("EMERGENCIES/PHOTOS/$uniqueFileName")
+        .putFile(File(imagemSelecionada!.path));
+
+    uploadTask.snapshotEvents.listen((TaskSnapshot taskSnapshot) {
+      switch (taskSnapshot.state) {
+        case TaskState.running:
+          final progress =
+              100.0 * (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
+          print("Upload is $progress% complete.");
+          break;
+        case TaskState.paused:
+          print("Upload is paused.");
+          break;
+        case TaskState.canceled:
+          print("Upload was canceled");
+          break;
+        case TaskState.error:
+          // Handle unsuccessful uploads
+          break;
+        case TaskState.success:
+          // Handle successful uploads on complete
+          // ...
+          break;
+      }
+    });
   }
 }
