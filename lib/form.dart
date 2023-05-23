@@ -4,6 +4,7 @@ import 'package:projeto_integrador3/waiting.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NewFormPage extends StatelessWidget {
   const NewFormPage({super.key});
@@ -37,8 +38,9 @@ class _MyHomePageState extends State<NewForm> {
   final nameController = TextEditingController();
   final numberController = TextEditingController();
   int _activeStepIndex = 0;
-  String imageUrl = '';
   double _uploadProgress = 0.0;
+  CollectionReference nomes =
+      FirebaseFirestore.instance.collection('emergencies');
 
   List<Step> stepList() => [
         Step(
@@ -158,13 +160,22 @@ class _MyHomePageState extends State<NewForm> {
                 Text(
                   '${numberController.text}',
                   style: const TextStyle(fontSize: 20),
-                )
+                ),
               ]),
         ),
       ];
 
   @override
   Widget build(BuildContext context) {
+    Future<void> adicionarNome(String nome, String phone) {
+      return nomes
+          .add({'name': nome, 'phone': phone, 'status': 'draft'})
+          // ignore: avoid_print
+          .then((value) => print("Emergencia adicionada"))
+          // ignore: avoid_print
+          .catchError((error) => print("Erro ao adicionar: $error"));
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -178,7 +189,7 @@ class _MyHomePageState extends State<NewForm> {
           if (_activeStepIndex < (stepList().length - 1)) {
             _activeStepIndex++;
           } else {
-            //TODO: Implementar o envio pro fire
+            adicionarNome(nameController.text, numberController.text);
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const LoadingPage()),
@@ -226,8 +237,7 @@ class _MyHomePageState extends State<NewForm> {
       imageRef.getDownloadURL().then((url) {
         // Aqui está a URL de download do arquivo
         String downloadUrl = url.toString();
-        print("URL de download: $downloadUrl");
-        // Você pode fazer o que quiser com a URL de download aqui
+        print("URL = $downloadUrl");
       }).catchError((error) {
         // Manipule erros ao obter a URL de download
         print("Erro ao obter a URL de download: $error");
