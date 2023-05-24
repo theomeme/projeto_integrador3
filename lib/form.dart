@@ -194,9 +194,20 @@ class _MyHomePageState extends State<NewForm> {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> adicionarNome(String nome, String phone, String url) {
+    Map<String, dynamic> emergencyData = {
+      'dateTime': DateTime.now().toString(),
+      'emergencyId': 'm7YaY7RCB23EnQdmewSM',
+      'location': [-22.865334, -47.058264],
+      'name': nameController.text,
+      'phone': numberController.text,
+      'photos': [
+        downloadUrl,
+      ],
+      'status': 'waiting',
+    };
+    Future<void> adicionarNome() {
       return nomes
-          .add({'name': nome, 'phone': phone, 'photos': url, 'status': 'draft'})
+          .add(emergencyData)
           // ignore: avoid_print
           .then((value) => print("Emergencia adicionada"))
           // ignore: avoid_print
@@ -216,8 +227,7 @@ class _MyHomePageState extends State<NewForm> {
           if (_activeStepIndex < (stepList().length - 1)) {
             _activeStepIndex++;
           } else {
-            adicionarNome(
-                nameController.text, numberController.text, downloadUrl);
+            adicionarNome();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const LoadingPage()),
