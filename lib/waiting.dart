@@ -100,8 +100,7 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
 
                 var docs = snapshot.data!.docs;
 
-                return SizedBox(
-                  height: 550,
+                return Expanded(
                   child: ListView.builder(
                       itemCount: docs.length,
                       itemBuilder: (context, index) {
