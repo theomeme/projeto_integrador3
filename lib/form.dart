@@ -39,6 +39,8 @@ class _MyHomePageState extends State<NewForm> {
   final numberController = TextEditingController();
   int _activeStepIndex = 0;
   double _uploadProgress = 0.0;
+  double _uploadProgressText = 0.0;
+
   CollectionReference nomes =
       FirebaseFirestore.instance.collection('emergencies');
 
@@ -46,87 +48,121 @@ class _MyHomePageState extends State<NewForm> {
 
   List<Step> stepList() => [
         Step(
-            state:
-                _activeStepIndex <= 0 ? StepState.editing : StepState.complete,
-            isActive: _activeStepIndex >= 0,
-            title: const Text('Fotos'),
-            content: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Primeiro precisamos de uma foto da area acidentada...',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-                  ),
+          state: _activeStepIndex <= 0 ? StepState.editing : StepState.complete,
+          isActive: _activeStepIndex >= 0,
+          title: const Text('Fotos'),
+          content: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Primeiro precisamos de uma foto da area acidentada...',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.camera_alt),
-                      onPressed: () {
-                        getImageFromCamera();
-                      },
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        String uniqueFileName =
-                            DateTime.now().millisecondsSinceEpoch.toString();
-                        final storageRef = FirebaseStorage.instance.ref();
-                        final imageRef = storageRef
-                            .child('EMERGENCIES/PHOTOS/$uniqueFileName.jpg');
-                        final uploadTask =
-                            imageRef.putFile(File(imagemSelecionada!.path));
-
-                        uploadTask.snapshotEvents
-                            .listen((TaskSnapshot snapshot) {
-                          setState(() {
-                            _uploadProgress =
-                                snapshot.bytesTransferred / snapshot.totalBytes;
-                          });
-                        });
-
-                        uploadTask.whenComplete(() {
-                          imageRef.getDownloadURL().then((url) {
-                            // Aqui está a URL de download do arquivo
-                            downloadUrl = url.toString();
-                            print("URL = $downloadUrl");
-                          }).catchError((error) {
-                            // Manipule erros ao obter a URL de download
-                            print("Erro ao obter a URL de download: $error");
-                          });
-                        });
-                      },
-                      child: const Text(
-                        'Enviar foto',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                LinearProgressIndicator(
-                  value: _uploadProgress,
-                  minHeight: 10,
-                  backgroundColor: Colors.grey,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
-                ),
-                const SizedBox(height: 8),
-                if (_uploadProgress == 1)
-                  const Text(
-                    'Upload concluído!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.camera_alt),
+                  TextButton(
+                    onPressed: () {
+                      getImageFromCamera();
+                    },
+                    child: const Text(
+                      'Tirar Foto',
+                      style: TextStyle(fontSize: 20),
                     ),
                   ),
-              ],
-            )),
+                  const SizedBox(
+                    width: 16,
+                  ),
+                  const Icon(Icons.upload),
+                  TextButton(
+                    onPressed: () {
+                      String uniqueFileName =
+                          DateTime.now().millisecondsSinceEpoch.toString();
+                      final storageRef = FirebaseStorage.instance.ref();
+                      final imageRef = storageRef
+                          .child('EMERGENCIES/PHOTOS/$uniqueFileName.jpg');
+                      final uploadTask =
+                          imageRef.putFile(File(imagemSelecionada!.path));
+
+                      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+                        setState(() {
+                          _uploadProgress =
+                              snapshot.bytesTransferred / snapshot.totalBytes;
+                          // _uploadProgressText = (snapshot.bytesTransferred /
+                          //         snapshot.totalBytes) *
+                          //     100;
+                        });
+                      });
+
+                      uploadTask.whenComplete(() {
+                        imageRef.getDownloadURL().then((url) {
+                          // Aqui está a URL de download do arquivo
+                          downloadUrl = url.toString();
+                          print("URL = $downloadUrl");
+                        }).catchError((error) {
+                          // Manipule erros ao obter a URL de download
+                          print("Erro ao obter a URL de download: $error");
+                        });
+                      });
+                    },
+                    child: const Text(
+                      'Enviar foto',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: LinearProgressIndicator(
+                      value: _uploadProgress,
+                      backgroundColor: Colors.grey,
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Colors.red),
+                      minHeight: 20,
+                    ),
+                  ),
+                  Text(
+                    '${(_uploadProgress * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                ],
+              ),
+              if (_uploadProgress == 1)
+                const Text(
+                  'Upload concluído!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              // LinearProgressIndicator(
+              //   value: _uploadProgress,
+              //   minHeight: 10,
+              //   backgroundColor: Colors.grey,
+              //   valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+              // ),
+              // const SizedBox(height: 8),
+              // if (_uploadProgress == 1)
+              //   const Text(
+              //     'Upload concluído!',
+              //     style: TextStyle(
+              //       fontSize: 14,
+              //       fontWeight: FontWeight.bold,
+              //     ),
+              //   ),
+            ],
+          ),
+        ),
         Step(
           state: _activeStepIndex <= 1 ? StepState.editing : StepState.complete,
           isActive: _activeStepIndex >= 1,
