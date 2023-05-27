@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_integrador3/home/home_page.dart';
 import 'package:projeto_integrador3/main.dart';
 import 'package:projeto_integrador3/waiting.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -6,33 +7,14 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class NewFormPage extends StatelessWidget {
-  const NewFormPage({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-        useMaterial3: true,
-      ),
-      home: const NewForm(title: 'Emergencia'),
-    );
-  }
-}
-
-class NewForm extends StatefulWidget {
-  const NewForm({super.key, required this.title});
-
-  final String title;
+class EmergencyFormPage extends StatefulWidget {
+  const EmergencyFormPage({super.key});
 
   @override
-  State<NewForm> createState() => _MyHomePageState();
+  State<EmergencyFormPage> createState() => _EmergencyFormPageState();
 }
 
-class _MyHomePageState extends State<NewForm> {
+class _EmergencyFormPageState extends State<EmergencyFormPage> {
   ImagePicker imagePicker = ImagePicker();
   File? imagemSelecionada;
   final nameController = TextEditingController();
@@ -57,7 +39,10 @@ class _MyHomePageState extends State<NewForm> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Primeiro precisamos de uma foto da area acidentada...',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 24,
+                  ),
                 ),
               ),
               Row(
@@ -171,7 +156,10 @@ class _MyHomePageState extends State<NewForm> {
             children: [
               const Text(
                 'Agora precisamos de alguns dados...',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 20,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -205,7 +193,10 @@ class _MyHomePageState extends State<NewForm> {
                   padding: EdgeInsets.all(8.0),
                   child: Text(
                     'Por favor confirme se os dados estao corretos...',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 22,
+                    ),
                   ),
                 ),
                 const Text(
@@ -252,11 +243,12 @@ class _MyHomePageState extends State<NewForm> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: Colors.redAccent,
+        centerTitle: true,
+        title: const Text('Solicitando ajuda'),
       ),
       body: Stepper(
-        type: StepperType.horizontal,
+        type: StepperType.vertical,
         currentStep: _activeStepIndex,
         steps: stepList(),
         onStepContinue: () {
@@ -274,7 +266,7 @@ class _MyHomePageState extends State<NewForm> {
         onStepCancel: () {
           if (_activeStepIndex == 0) {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const MyApp()));
+                MaterialPageRoute(builder: (context) => const HomePage()));
           } else {
             _activeStepIndex--;
             setState(() {});
