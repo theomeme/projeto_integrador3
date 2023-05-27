@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/form.dart';
+import 'package:projeto_integrador3/emergency_form_page.dart';
+import 'package:projeto_integrador3/home/home_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -10,9 +11,11 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MaterialApp(
-    home: MyApp(),
-  ));
+  runApp(
+    const MaterialApp(
+      home: HomePage(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -39,11 +42,11 @@ class MyApp extends StatelessWidget {
                 children: [
                   OutlinedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const NewFormPage()),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) => const NewFormPage()),
+                      // );
                     },
                     child: const Text(
                       'SOLICITAR\nEMERGENCIA',
