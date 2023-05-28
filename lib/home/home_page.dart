@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/emergency_form//emergency_form_page.dart';
+import 'package:projeto_integrador3/emergency_form/emergency_form_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
