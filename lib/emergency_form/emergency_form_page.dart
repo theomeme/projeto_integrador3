@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'dart:io';
 
 class EmergencyFormPage extends StatefulWidget {
   const EmergencyFormPage({super.key});
@@ -17,7 +19,10 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
-  List<String> photosPath = ['',''];
+  ImagePicker imagePicker = ImagePicker();
+  File? imagemSelecionada;
+
+  List<String> photosPath = [];
   late DocumentReference emergencyDocDraft;
 
   final phoneMask = MaskTextInputFormatter(
@@ -31,6 +36,28 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
           title: const Text('Fotos'),
           content: Column(
             children: [
+              const Text(
+                'Precisamos de algumas fotos',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 22,
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              const Text(
+                'Para você solicitar ajuda precisamos que você tire as fotos listadas abaixo.',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w300,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
               SizedBox(
                 height: 390,
                 child: ListView(
@@ -53,11 +80,14 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                   absorbing:
                                       (photosPath.isEmpty) ? true : false,
                                   child: TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      openImageDialog(imagePath: photosPath[0]);
+                                    },
                                     child: Text(
                                       (photosPath.isEmpty) ? '' : 'Visualizar',
                                       style: const TextStyle(
-                                          color: Colors.black45),
+                                        color: Colors.black45,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -65,7 +95,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                               Padding(
                                 padding: const EdgeInsets.only(right: 6),
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    getImageFromCamera(imageIndex: 0);
+                                  },
                                   child: Text(
                                     (photosPath.isEmpty)
                                         ? 'Tirar foto'
@@ -96,7 +128,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                   absorbing:
                                       (photosPath.length >= 2) ? false : true,
                                   child: TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      openImageDialog(imagePath: photosPath[1]);
+                                    },
                                     child: Text(
                                       (photosPath.length >= 2)
                                           ? 'Visualizar'
@@ -111,7 +145,7 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                 padding: const EdgeInsets.only(right: 6),
                                 child: TextButton(
                                   onPressed: () {
-                                    if (photosPath.length < 2) {
+                                    if (photosPath.isEmpty) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
@@ -119,7 +153,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                               'Tire as fotos anteriores primeiro.'),
                                         ),
                                       );
-                                    } else {}
+                                    } else {
+                                      getImageFromCamera(imageIndex: 1);
+                                    }
                                   },
                                   child: Text(
                                     (photosPath.length >= 2)
@@ -151,7 +187,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                   absorbing:
                                       (photosPath.length >= 3) ? false : true,
                                   child: TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      openImageDialog(imagePath: photosPath[2]);
+                                    },
                                     child: Text(
                                       (photosPath.length >= 3)
                                           ? 'Visualizar'
@@ -166,7 +204,7 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                 padding: const EdgeInsets.only(right: 6),
                                 child: TextButton(
                                   onPressed: () {
-                                    if (photosPath.length < 3) {
+                                    if (photosPath.length < 2) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
@@ -174,10 +212,12 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                                               'Tire as fotos anteriores primeiro.'),
                                         ),
                                       );
-                                    } else {}
+                                    } else {
+                                      getImageFromCamera(imageIndex: 2);
+                                    }
                                   },
                                   child: Text(
-                                    (photosPath.length >= 3)
+                                    (photosPath.length >= 2)
                                         ? 'Alterar foto'
                                         : 'Tirar foto',
                                   ),
@@ -223,7 +263,7 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                       keyboardType: TextInputType.name,
                       validator: (value) {
                         if (value!.isEmpty ||
-                            !RegExp(r'^[a-z A-Z á-ú Á-Ú]+$').hasMatch(value)) {
+                            !RegExp(r'^[a-z A-Zá-úÁ-Ú]+$').hasMatch(value)) {
                           return 'Preencha o campo com seu nome';
                         }
                         return null;
@@ -308,11 +348,26 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                 },
                 onStepContinue: () {
                   if (_index >= 0 && _index < emergencySteps().length - 1) {
+                    //mudar pra switch case
                     if (_index == 1) {
                       if (_formKey.currentState!.validate()) {
                         setState(() {
                           _index += 1;
                         });
+                      }
+                    } else if (_index == 0) {
+                      if (photosPath.length == 3) {
+                        setState(() {
+                          _index += 1;
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Tire todas as fotos primeiro.'),
+                          ),
+                        );
                       }
                     } else {
                       setState(() {
@@ -357,4 +412,37 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
       ),
     );
   }
+
+  getImageFromCamera({required int imageIndex}) async {
+    final XFile? tempImage =
+        await imagePicker.pickImage(source: ImageSource.camera);
+    if (tempImage != null) {
+      setState(() {
+        if (photosPath.isNotEmpty && photosPath.length >= imageIndex + 1) {
+          photosPath[imageIndex] = tempImage.path;
+        } else {
+          photosPath.add(tempImage.path);
+        }
+      });
+    }
+  }
+
+  openImageDialog({required String imagePath}) => showDialog(
+        context: context,
+        builder: (BuildContext context) => Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.file(File(imagePath)),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Fechar'),
+              )
+            ],
+          ),
+        ),
+      );
 }
