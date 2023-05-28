@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'dart:io';
@@ -20,7 +19,6 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
   final TextEditingController _phoneController = TextEditingController();
 
   ImagePicker imagePicker = ImagePicker();
-  File? imagemSelecionada;
 
   List<String> photosPath = [];
   late DocumentReference emergencyDocDraft;
@@ -302,15 +300,61 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
         Step(
           isActive: _index == 2,
           title: const Text('Revisão'),
-          content: const Column(
+          content: Column(
             children: [
-              Text(
+              const Text(
                 'Confirme seus dados',
                 style: TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.w500,
                   fontSize: 26,
                 ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Row(
+                children: [
+                  const Text(
+                    'Nome: ',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                    ),
+                  ),
+                  Text(
+                    _nameController.text,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w300,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  const Text(
+                    'Telefone: ',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                    ),
+                  ),
+                  Text(
+                    _phoneController.text,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w300,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 20,
               ),
             ],
           ),
@@ -338,6 +382,7 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                 currentStep: _index,
                 steps: emergencySteps(),
                 onStepCancel: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   if (_index > 0) {
                     setState(() {
                       _index -= 1;
@@ -348,6 +393,7 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                 },
                 onStepContinue: () {
                   if (_index >= 0 && _index < emergencySteps().length - 1) {
+                    FocusManager.instance.primaryFocus?.unfocus();
                     //mudar pra switch case
                     if (_index == 1) {
                       if (_formKey.currentState!.validate()) {
@@ -361,11 +407,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                           _index += 1;
                         });
                       } else {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
+                        ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                                'Tire todas as fotos primeiro.'),
+                            content: Text('Tire todas as fotos primeiro.'),
                           ),
                         );
                       }
@@ -377,9 +421,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                   }
                 },
                 onStepTapped: (int index) {
-                  setState(() {
-                    _index = index;
-                  });
+                  // setState(() {
+                  //   _index = index;
+                  // });
                 },
                 controlsBuilder:
                     (BuildContext context, ControlsDetails details) {
