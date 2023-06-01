@@ -373,7 +373,11 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Colors.redAccent)),
+          colorScheme: const ColorScheme.light(
+            primary: Colors.redAccent,
+            secondary: Colors.black54,
+          ),
+        ),
         child: Column(
           children: [
             Expanded(
