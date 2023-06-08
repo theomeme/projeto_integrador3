@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'dart:io';
+import 'package:projeto_integrador3/emergency_form/emergency_form_functions.dart';
 
 class EmergencyFormPage extends StatefulWidget {
   const EmergencyFormPage({super.key});
@@ -21,7 +23,10 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
   ImagePicker imagePicker = ImagePicker();
 
   List<String> photosPath = [];
-  late DocumentReference emergencyDocDraft;
+
+  final func = EmergencyFormFunctions();
+
+  late Future<DocumentReference<Object?>> emergencyDocDraft;
 
   final phoneMask = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -395,12 +400,17 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                     Navigator.pop(context);
                   }
                 },
-                onStepContinue: () {
+                onStepContinue: () async {
                   if (_index >= 0 && _index < emergencySteps().length - 1) {
                     FocusManager.instance.primaryFocus?.unfocus();
                     //mudar pra switch case
                     if (_index == 1) {
                       if (_formKey.currentState!.validate()) {
+                        emergencyDocDraft = (await func.createEmergency(
+                          _nameController.text,
+                          phoneMask.getUnmaskedText(),
+                        )) as Future<DocumentReference<Object?>>;
+
                         setState(() {
                           _index += 1;
                         });
@@ -417,6 +427,8 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                           ),
                         );
                       }
+                    } else if (_index == 2) {
+                      // await func.uploadImages(photosPath, emergencyDocDraft);
                     } else {
                       setState(() {
                         _index += 1;
