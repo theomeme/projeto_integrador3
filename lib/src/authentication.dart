@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -35,6 +36,22 @@ class Authentication{
     } catch (e) {
       await getAuth();
       return await findUserInfo();
+    }
+  }
+
+
+  Future<List> checkLocalInfo() async {
+    try {
+      final SharedPreferences preferences = await SharedPreferences.getInstance();
+
+      final rescuerUid = preferences.getString('rescuerUid');
+      final fcmToken = preferences.getString('fcmToken');
+
+      final List<String> userInfo = [rescuerUid!, fcmToken!];
+
+      return userInfo;
+    } catch (e) {
+      throw ErrorDescription('No information found.');
     }
   }
 }
