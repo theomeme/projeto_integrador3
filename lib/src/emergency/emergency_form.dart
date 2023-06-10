@@ -4,17 +4,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:projeto_integrador3/emergency_form/emergency_form_functions.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
 
-class EmergencyFormPage extends StatefulWidget {
-  const EmergencyFormPage({super.key});
+class EmergencyForm extends StatefulWidget {
+  const EmergencyForm({super.key});
 
   @override
-  State<EmergencyFormPage> createState() => _EmergencyFormPageState();
+  State<EmergencyForm> createState() => _EmergencyFormState();
 }
 
-class _EmergencyFormPageState extends State<EmergencyFormPage> {
+class _EmergencyFormState extends State<EmergencyForm> {
   int _index = 0;
+
+  final auth = Authentication();
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
@@ -24,9 +27,9 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
 
   List<String> photosPath = [];
 
-  final func = EmergencyFormFunctions();
+  final emergencyViewModel = EmergencyViewModel();
 
-  late Future<DocumentReference<Object?>> emergencyDocDraft;
+  DocumentReference? emergencyRef;
 
   final phoneMask = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -403,36 +406,50 @@ class _EmergencyFormPageState extends State<EmergencyFormPage> {
                 onStepContinue: () async {
                   if (_index >= 0 && _index < emergencySteps().length - 1) {
                     FocusManager.instance.primaryFocus?.unfocus();
-                    //mudar pra switch case
-                    if (_index == 1) {
-                      if (_formKey.currentState!.validate()) {
-                        emergencyDocDraft = (await func.createEmergency(
-                          _nameController.text,
-                          phoneMask.getUnmaskedText(),
-                        )) as Future<DocumentReference<Object?>>;
-
-                        setState(() {
-                          _index += 1;
-                        });
-                      }
-                    } else if (_index == 0) {
-                      if (photosPath.length == 3) {
-                        setState(() {
-                          _index += 1;
-                        });
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tire todas as fotos primeiro.'),
-                          ),
-                        );
-                      }
-                    } else if (_index == 2) {
-                      // await func.uploadImages(photosPath, emergencyDocDraft);
-                    } else {
-                      setState(() {
-                        _index += 1;
-                      });
+                    switch (_index) {
+                      case 0:
+                        if (photosPath.length == 3) {
+                          setState(() {
+                            _index += 1;
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tire todas as fotos primeiro.'),
+                            ),
+                          );
+                        }
+                        break;
+                      case 1:
+                        if (_formKey.currentState!.validate()) {
+                          if (auth.isAuthenticanted()) {
+                            if (emergencyRef == null) {
+                              emergencyRef =
+                                  await emergencyViewModel.createEmergencyDraft(
+                                      _nameController.text,
+                                      phoneMask.getUnmaskedText());
+                              setState(() {
+                                _index += 1;
+                              });
+                            } else {
+                              setState(() {
+                                _index += 1;
+                              });
+                            }
+                          } else {
+                            auth.getAuth();
+                            emergencyRef =
+                                await emergencyViewModel.createEmergencyDraft(
+                                    _nameController.text,
+                                    phoneMask.getUnmaskedText());
+                            setState(() {
+                              _index += 1;
+                            });
+                          }
+                        }
+                        break;
+                      case 2:
+                        break;
                     }
                   }
                 },

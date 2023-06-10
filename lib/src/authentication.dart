@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class Authentication{
+class Authentication {
   Future<void> getAuth() async {
     final SharedPreferences preferences = await SharedPreferences.getInstance();
     try {
@@ -22,18 +22,26 @@ class Authentication{
     }
   }
 
-  Future<List> retrieveLocalInfo() async {
+  Future<Map> retrieveLocalInfo() async {
     try {
-      final SharedPreferences preferences = await SharedPreferences.getInstance();
+      final SharedPreferences preferences =
+          await SharedPreferences.getInstance();
 
       final rescuerUid = preferences.getString('rescuerUid');
       final fcmToken = preferences.getString('fcmToken');
 
-      final List<String> userInfo = [rescuerUid!, fcmToken!];
+      final Map<String, String> userInfo = {
+        'rescuerUid': rescuerUid!,
+        'fcmToken': fcmToken!
+      };
 
       return userInfo;
     } catch (e) {
-      throw ErrorDescription('No information found.');
+      return {};
     }
+  }
+
+  bool isAuthenticanted() {
+    return FirebaseAuth.instance.currentUser != null;
   }
 }
