@@ -22,25 +22,7 @@ class Authentication{
     }
   }
 
-  Future<List<String>> findUserInfo() async {
-    try {
-      final SharedPreferences preferences = await SharedPreferences.getInstance();
-
-      final rescuerUid = preferences.getString('rescuerUid');
-      final fcmToken = preferences.getString('fcmToken');
-
-      final List<String> userInfo = [rescuerUid!, fcmToken!];
-
-      return userInfo;
-
-    } catch (e) {
-      await getAuth();
-      return await findUserInfo();
-    }
-  }
-
-
-  Future<List> checkLocalInfo() async {
+  Future<List> retrieveLocalInfo() async {
     try {
       final SharedPreferences preferences = await SharedPreferences.getInstance();
 
