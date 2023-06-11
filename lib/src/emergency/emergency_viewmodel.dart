@@ -55,10 +55,9 @@ class EmergencyViewModel {
     ];
 
     final List<String> fileImagesName = List<String>.generate(
-      3,
-      (index) =>
-          '${docRef.id}_${DateTime.now().millisecondsSinceEpoch}_${imagesName[index]}',
-    );
+        3,
+        (index) =>
+            '${docRef.id}_${DateTime.now().millisecondsSinceEpoch}_${imagesName[index]}');
 
     List<Reference> references = List<Reference>.generate(
         3,
@@ -75,7 +74,6 @@ class EmergencyViewModel {
       task.snapshotEvents.listen((TaskSnapshot taskSnapshot) async {
         switch (taskSnapshot.state) {
           case TaskState.running:
-            print(taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
             uploadProgress(
                 taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
             break;
@@ -109,8 +107,10 @@ class EmergencyViewModel {
     List<String> images,
     DocumentReference emergencyRef,
   ) async {
-    print('docref: ${emergencyRef.id}, images: $images');
-    return FirebaseFirestore.instance.collection('emergencies').doc(emergencyRef.id).update({
+    return FirebaseFirestore.instance
+        .collection('emergencies')
+        .doc(emergencyRef.id)
+        .update({
       'photos': FieldValue.arrayUnion(images),
       'status': 'waiting',
     });

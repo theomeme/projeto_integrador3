@@ -55,13 +55,15 @@ class _EmergencyUploadState extends State<EmergencyUpload> {
             secondary: Colors.black54,
           ),
         ),
-        child: Column(
-          children: [
-            Text(uploadLabel),
-            LinearProgressIndicator(
-              value: uploadProgress,
-            )
-          ],
+        child: Center(
+          child: Column(
+            children: [
+              Text(uploadLabel),
+              LinearProgressIndicator(
+                value: uploadProgress,
+              )
+            ],
+          ),
         ),
       ),
     );

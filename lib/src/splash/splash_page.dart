@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/home/home_page.dart';
+import 'package:projeto_integrador3/src/home/home_page.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
 
 class SplashPage extends StatefulWidget {
