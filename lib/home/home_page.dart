@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/emergency_form/emergency_form_page.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_form.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const EmergencyFormPage(),
+                    builder: (context) => const EmergencyForm(),
                   ),
                 );
               },

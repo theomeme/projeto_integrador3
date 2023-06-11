@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_upload.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
 
 class EmergencyForm extends StatefulWidget {
@@ -448,9 +449,15 @@ class _EmergencyFormState extends State<EmergencyForm> {
                           }
                         }
                         break;
-                      case 2:
-                        break;
                     }
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EmergencyUpload(
+                            emergencyPhotosPath: photosPath, emergencyRef: emergencyRef!),
+                      ),
+                    );
                   }
                 },
                 onStepTapped: (int index) {
@@ -492,7 +499,7 @@ class _EmergencyFormState extends State<EmergencyForm> {
 
   getImageFromCamera({required int imageIndex}) async {
     final XFile? tempImage =
-        await imagePicker.pickImage(source: ImageSource.camera);
+        await imagePicker.pickImage(source: ImageSource.camera, imageQuality: 100);
     if (tempImage != null) {
       setState(() {
         if (photosPath.isNotEmpty && photosPath.length >= imageIndex + 1) {

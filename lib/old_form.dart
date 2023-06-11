@@ -18,10 +18,10 @@ class SecondPage extends StatelessWidget {
           backgroundColor: Colors.redAccent,
           leading: IconButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MyApp()),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => const MyApp()),
+                // );
               },
               icon: const Icon(Icons.arrow_back)),
           title: const Text(

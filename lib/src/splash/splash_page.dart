@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/main.dart';
+import 'package:projeto_integrador3/home/home_page.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -9,12 +10,17 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  final authentication = Authentication();
+
   @override
-  void initState() {
+  initState() {
     super.initState();
+    // await authentication.getAuth();
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const MyApp()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     });
   }
 
