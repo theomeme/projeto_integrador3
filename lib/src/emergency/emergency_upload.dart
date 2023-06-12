@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
 
+import 'emergency_dentists_list.dart';
+
 class EmergencyUpload extends StatefulWidget {
   final List<String> emergencyPhotosPath;
-  final DocumentReference emergencyRef;
+  final DocumentSnapshot emergencyRef;
 
   const EmergencyUpload({
     required this.emergencyPhotosPath,
@@ -24,20 +26,23 @@ class _EmergencyUploadState extends State<EmergencyUpload> {
 
   @override
   void initState() {
-    emergencyViewModel.uploadImages(
-      widget.emergencyPhotosPath,
-      widget.emergencyRef,
-      (value) {
-        setState(() {
-          uploadProgress = value;
-        });
-      },
-      (value) {
-        setState(() {
-          uploadLabel = value;
-        });
-      },
-    );
+    emergencyViewModel
+        .uploadImages(widget.emergencyPhotosPath, widget.emergencyRef, (value) {
+      setState(() {
+        uploadProgress = value;
+      });
+    }, (value) {
+      setState(() {
+        uploadLabel = value;
+      });
+    }, () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const EmergencyDentistsList(),
+        ),
+      );
+    });
     super.initState();
   }
 

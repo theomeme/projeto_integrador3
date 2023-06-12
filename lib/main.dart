@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/src/home/home_page.dart';
 import 'package:projeto_integrador3/src/splash/splash_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';

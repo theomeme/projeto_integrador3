@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/home/home_page.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
 
@@ -15,6 +16,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   initState() {
     super.initState();
+    Emergency.wipeEmergencyData();
     // await authentication.getAuth();
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(

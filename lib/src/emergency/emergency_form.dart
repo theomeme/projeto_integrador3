@@ -30,7 +30,7 @@ class _EmergencyFormState extends State<EmergencyForm> {
 
   final emergencyViewModel = EmergencyViewModel();
 
-  DocumentReference? emergencyRef;
+  DocumentSnapshot? emergencyRef;
 
   final phoneMask = MaskTextInputFormatter(
     mask: '(##) #####-####',

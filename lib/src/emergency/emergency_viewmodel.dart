@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 
 class EmergencyViewModel {
   final CollectionReference emergencies =
@@ -11,9 +13,8 @@ class EmergencyViewModel {
   final storageRef = FirebaseStorage.instance.ref();
 
   Future<Object?> checkOngoingEmergency() async {
-    final auth = Authentication();
     try {
-      final userData = await auth.retrieveLocalInfo();
+      final userData = await Authentication.retrieveLocalInfo();
       final ongoingEmergency = await FirebaseFirestore.instance
           .collection('emergencies')
           .where('rescuerUid', isEqualTo: userData['rescuerUid'])
@@ -27,27 +28,32 @@ class EmergencyViewModel {
     }
   }
 
-  Future<DocumentReference> createEmergencyDraft(
+  Future<DocumentSnapshot<Object?>> createEmergencyDraft(
       String name, String phone) async {
-    final auth = Authentication();
 
-    final userData = await auth.retrieveLocalInfo();
+    final userData = await Authentication.retrieveLocalInfo();
 
-    final emergency = await emergencies.add({
+    final location = await getPosition();
+
+    await emergencies.doc(userData['rescuerUid']).set({
       'rescuerUid': userData['rescuerUid'],
       'name': name,
       'phoneNumber': phone,
       'status': 'drafting',
       'photos': [],
-      'location': [],
+      'location': GeoPoint(location.latitude, location.longitude),
       'createdAt': DateTime.now(),
     });
+
+    final emergency = await emergencies.doc(userData['rescuerUid']).get();
+
+    Emergency.saveEmergencyId(emergency.id);
 
     return emergency;
   }
 
-  Future<void> uploadImages(List<String> imagesPath, DocumentReference docRef,
-      ValueSetter uploadProgress, ValueSetter uploadLabel) async {
+  Future<void> uploadImages(List<String> imagesPath, DocumentSnapshot docRef,
+      ValueSetter uploadProgress, ValueSetter uploadLabel, VoidCallback goToList) async {
     final List<String> imagesName = [
       'accident',
       'document',
@@ -96,6 +102,7 @@ class EmergencyViewModel {
             emergencyImageDownloadUrl.add(value);
             if (emergencyImageDownloadUrl.length == 3) {
               addImagesToEmergency(emergencyImageDownloadUrl, docRef);
+              goToList();
             }
           },
         ),
@@ -105,7 +112,7 @@ class EmergencyViewModel {
 
   Future<void> addImagesToEmergency(
     List<String> images,
-    DocumentReference emergencyRef,
+    DocumentSnapshot emergencyRef,
   ) async {
     return FirebaseFirestore.instance
         .collection('emergencies')
@@ -114,5 +121,29 @@ class EmergencyViewModel {
       'photos': FieldValue.arrayUnion(images),
       'status': 'waiting',
     });
+  }
+
+  Future<Position> getPosition() async {
+    LocationPermission permission;
+
+    permission = await Geolocator.checkPermission();
+
+    bool locationEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!locationEnabled) {
+      return Future.error('Por favor, habilite a localização no smartphone');
+    }
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Você precisa autorizar o acesso à localização');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Você precisa autorizar o acesso à localização');
+    }
+
+    return await Geolocator.getCurrentPosition();
   }
 }
