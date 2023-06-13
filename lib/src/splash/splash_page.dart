@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/home/home_page.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:projeto_integrador3/src/review/review_form.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -21,7 +22,7 @@ class _SplashPageState extends State<SplashPage> {
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (context) => const ReviewForm()),
       );
     });
   }
