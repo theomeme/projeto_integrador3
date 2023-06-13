@@ -60,13 +60,20 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
                 itemBuilder: (context, index) {
                   if (docs[index]["rescuerUid"] == emergencyId) {
                     return SizedBox(
-                      height: 300,
+                      height: 400,
                       child: ListTile(
                         leading: const Icon(Icons.person),
-                        title: Text(docs[index]['professionalName']),
+                        title: Text(docs[index].get("professionalName")),
                         subtitle: const Text("13.6 km de você"),
                         trailing: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            openProfessionalDialog(
+                              professionalUid:
+                                  docs[index].get("professionalUid"),
+                              distance: 13.6,
+                              responseId: docs[index].id,
+                            );
+                          },
                           child: const Text(
                             "Ver mais",
                             softWrap: true,
@@ -89,6 +96,89 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
           ),
         ),
       ),
+    );
+  }
+
+  openProfessionalDialog({
+    required String professionalUid,
+    required double distance,
+    required String responseId,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('profiles')
+        .doc(professionalUid)
+        .get()
+        .then(
+      (professionalValue) async {
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(professionalUid)
+            .collection('addresses')
+            .where("primary", isEqualTo: true)
+            .get()
+            .then(
+          (professionalAddress) {
+            showDialog(
+              context: context,
+              useSafeArea: true,
+              builder: (BuildContext context) => Dialog.fullscreen(
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.light(
+                      primary: Colors.redAccent,
+                      secondary: Colors.black54,
+                    ),
+                  ),
+                  child: Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Informações do dentista'),
+                      centerTitle: true,
+                    ),
+                    body: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.network(professionalValue["urlImg"]),
+                        Text(professionalValue["name"].toString()),
+                        Text("CRO ${professionalValue["cro"].toString()}"),
+                        Text(
+                            "${professionalAddress.docs[0]["street"]}, ${professionalAddress.docs[0]["neighborhood"]}, ${professionalAddress.docs[0]["city"]} - ${professionalAddress.docs[0]["state"]} - CEP ${professionalAddress.docs[0]["zipeCode"]}"),
+                        Text("$distance km de você"),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                Responses.rejectProfessional(
+                                    responseId: responseId);
+                              },
+                              child: const Text('Recusar'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Responses.acceptProfessional(
+                                    emergencyId: emergencyId!,
+                                    professionalUid:
+                                        professionalValue["authUid"]);
+                              },
+                              child: const Text(
+                                'Aceitar',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                ),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
