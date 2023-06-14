@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:projeto_integrador3/src/review/review_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class ReviewForm extends StatefulWidget {
   final String professionalUid;
@@ -136,7 +138,8 @@ class _ReviewFormState extends State<ReviewForm> {
                     review: review,
                   );
 
-                  // Aqui você pode adicionar lógica adicional, como exibir uma mensagem de sucesso, retornar para a tela anterior, etc.
+                  signOutAndNavigateToInitial();
+
                 },
                 child: const Text(
                   "Avaliar",
@@ -149,6 +152,15 @@ class _ReviewFormState extends State<ReviewForm> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> signOutAndNavigateToInitial() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/', // Defina o nome da rota inicial do seu aplicativo
+          (_) => false, // Impede que o usuário volte para esta tela ao pressionar o botão "Voltar"
     );
   }
 }

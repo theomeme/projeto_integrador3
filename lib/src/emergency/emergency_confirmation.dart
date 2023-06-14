@@ -190,7 +190,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                 MaterialPageRoute(
                   builder: (context) => ReviewForm(
                     professionalUid: widget.professionalUid,
-                    emergencyId: emergency?["rescuerUid"], // Use o ID do documento da emergência
+                    emergencyId: emergency?["rescuerUid"],
                   ),
                 ),
               );
@@ -198,7 +198,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
               print('xabu status');
               return Container();
             }
-            return Container(); // Adicionado o retorno no final do método
+            return Container();
           },
         ),
       ),
