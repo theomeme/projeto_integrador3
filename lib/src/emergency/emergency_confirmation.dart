@@ -24,6 +24,22 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
   final int endTime = DateTime.now().millisecondsSinceEpoch +
       20000; // Define o tempo inicial do temporizador (1 minuto)
 
+  Future<Map<String, dynamic>> getProfessionalAddress() async {
+    final querySnapshot = await FirebaseHelper.getFirestore()
+        .collection("profiles")
+        .doc(widget.professionalUid)
+        .collection("addresses")
+        .where("primary", isEqualTo: true)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final snapshot = querySnapshot.docs.first;
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      throw Exception("Endereço primário não encontrado para o médico");
+    }
+  }
+
   Stream<DocumentSnapshot> getEmergencySnapshot() async* {
     String? emergencyId = await Emergency.getEmergencyId();
 
@@ -92,7 +108,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
             } else if (emergency?["status"] == "onGoing") {
               return StreamBuilder(
                 stream: getResponseSnapshot(),
-                builder: (context, snapshot) {
+                builder: (context, snapshot)  {
                   var response = snapshot.data;
 
                   if (response?.get("willProfessionalMove") == -1) {
@@ -102,31 +118,62 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                           fontSize: 18, fontWeight: FontWeight.w500),
                     );
                   } else if (response?.get("willProfessionalMove") == 0) {
-                 //   final String address = response?.get("professionalAddress") ?? "";
+                    return FutureBuilder(
+                      future: getProfessionalAddress(),
+                      builder: (context, addressSnapshot) {
+                        if (addressSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (addressSnapshot.hasData) {
+                          final Map<String, dynamic> addressData =
+                          addressSnapshot.data as Map<String, dynamic>;
 
-                    return Column(
+                          final String street = addressData["street"] ?? "";
+                          final String number = addressData["number"] ?? "";
+                          final String city = addressData["city"] ?? "";
+
+                          final String fullAddress = "$street $number, $city";
+
+                          return Column(
+                            children: [
+                              const Text(
+                                "O médico está na clínica",
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Endereço: $fullAddress",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () {
+                                  launchMaps(fullAddress);
+                                },
+                                child: const Text("Ver no Mapa"),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return const Text("Endereço não encontrado");
+                        }
+                      },
+                    );
+                  } else if (response?.get("willProfessionalMove") == 1) {
+                    return const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "O médico está na clínica",
+                        Text(
+                          "O médico está a caminho!",
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
-                          "Endereço: jg",
+                          "Ele logo estará no local para atendê-lo.",
                           style: TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                           // launchMaps(address);
-                          },
-                          child: const Text("Ver no Mapa"),
                         ),
                       ],
                     );
-                  }
-                  else if (response?.get("willProfessionalMove") == 1) {
-                    print("moving");
                   } else {
                     print("xabu");
                   }
@@ -152,8 +199,4 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
       throw 'Não foi possível abrir o mapa';
     }
   }
-
-
-
-
 }
