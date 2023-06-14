@@ -18,8 +18,6 @@ class EmergencyForm extends StatefulWidget {
 class _EmergencyFormState extends State<EmergencyForm> {
   int _index = 0;
 
-  final auth = Authentication();
-
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -35,6 +33,168 @@ class _EmergencyFormState extends State<EmergencyForm> {
   final phoneMask = MaskTextInputFormatter(
     mask: '(##) #####-####',
   );
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Solicitando emergência',
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.redAccent,
+      ),
+      body: Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.redAccent,
+            secondary: Colors.black54,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Stepper(
+                type: StepperType.horizontal,
+                currentStep: _index,
+                steps: emergencySteps(),
+                onStepCancel: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  if (_index > 0) {
+                    setState(() {
+                      _index -= 1;
+                    });
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+                onStepContinue: () async {
+                  if (_index >= 0 && _index < emergencySteps().length) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    switch (_index) {
+                      case 0:
+                        if (photosPath.length == 3) {
+                          setState(() {
+                            _index += 1;
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tire todas as fotos primeiro.'),
+                            ),
+                          );
+                        }
+                        break;
+                      case 1:
+                        if (_formKey.currentState!.validate()) {
+                          if (Authentication.isAuthenticated()) {
+                            if (emergencyRef == null) {
+                              emergencyRef =
+                                  await emergencyViewModel.createEmergencyDraft(
+                                      _nameController.text,
+                                      phoneMask.getUnmaskedText());
+                              setState(() {
+                                _index += 1;
+                              });
+                            } else {
+                              setState(() {
+                                _index += 1;
+                              });
+                            }
+                          } else {
+                            Authentication.setAuth();
+                            emergencyRef =
+                                await emergencyViewModel.createEmergencyDraft(
+                                    _nameController.text,
+                                    phoneMask.getUnmaskedText());
+                            setState(() {
+                              _index += 1;
+                            });
+                          }
+                        }
+                        break;
+                      case 2:
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EmergencyUpload(
+                                emergencyPhotosPath: photosPath,
+                                emergencyRef: emergencyRef!),
+                          ),
+                        );
+                        break;
+                    }
+                  }
+                },
+                onStepTapped: (int index) {
+                  // setState(() {
+                  //   _index = index;
+                  // });
+                },
+                controlsBuilder:
+                    (BuildContext context, ControlsDetails details) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: details.onStepCancel,
+                          child: Text(_index > 0 ? 'Voltar' : 'Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: details.onStepContinue,
+                          child: Text(_index < 2 ? 'Avançar' : 'Abrir chamado'),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  getImageFromCamera({required int imageIndex}) async {
+    final XFile? tempImage = await imagePicker.pickImage(
+        source: ImageSource.camera, imageQuality: 100);
+    if (tempImage != null) {
+      setState(() {
+        if (photosPath.isNotEmpty && photosPath.length >= imageIndex + 1) {
+          photosPath[imageIndex] = tempImage.path;
+        } else {
+          photosPath.add(tempImage.path);
+        }
+      });
+    }
+  }
+
+  openImageDialog({required String imagePath}) => showDialog(
+        context: context,
+        builder: (BuildContext context) => Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.file(File(imagePath)),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Fechar'),
+              )
+            ],
+          ),
+        ),
+      );
 
   List<Step> emergencySteps() => [
         Step(
@@ -369,164 +529,4 @@ class _EmergencyFormState extends State<EmergencyForm> {
           ),
         ),
       ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Solicitando emergência',
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.redAccent,
-      ),
-      body: Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Colors.redAccent,
-            secondary: Colors.black54,
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Stepper(
-                type: StepperType.horizontal,
-                currentStep: _index,
-                steps: emergencySteps(),
-                onStepCancel: () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  if (_index > 0) {
-                    setState(() {
-                      _index -= 1;
-                    });
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-                onStepContinue: () async {
-                  if (_index >= 0 && _index < emergencySteps().length - 1) {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    switch (_index) {
-                      case 0:
-                        if (photosPath.length == 3) {
-                          setState(() {
-                            _index += 1;
-                          });
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tire todas as fotos primeiro.'),
-                            ),
-                          );
-                        }
-                        break;
-                      case 1:
-                        if (_formKey.currentState!.validate()) {
-                          if (auth.isAuthenticanted()) {
-                            if (emergencyRef == null) {
-                              emergencyRef =
-                                  await emergencyViewModel.createEmergencyDraft(
-                                      _nameController.text,
-                                      phoneMask.getUnmaskedText());
-                              setState(() {
-                                _index += 1;
-                              });
-                            } else {
-                              setState(() {
-                                _index += 1;
-                              });
-                            }
-                          } else {
-                            auth.getAuth();
-                            emergencyRef =
-                                await emergencyViewModel.createEmergencyDraft(
-                                    _nameController.text,
-                                    phoneMask.getUnmaskedText());
-                            setState(() {
-                              _index += 1;
-                            });
-                          }
-                        }
-                        break;
-                    }
-                  } else {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EmergencyUpload(
-                            emergencyPhotosPath: photosPath, emergencyRef: emergencyRef!),
-                      ),
-                    );
-                  }
-                },
-                onStepTapped: (int index) {
-                  // setState(() {
-                  //   _index = index;
-                  // });
-                },
-                controlsBuilder:
-                    (BuildContext context, ControlsDetails details) {
-                  return Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: details.onStepCancel,
-                          child: Text(_index > 0 ? 'Voltar' : 'Cancelar'),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: details.onStepContinue,
-                          child: Text(_index < 2 ? 'Avançar' : 'Abrir chamado'),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  getImageFromCamera({required int imageIndex}) async {
-    final XFile? tempImage =
-        await imagePicker.pickImage(source: ImageSource.camera, imageQuality: 100);
-    if (tempImage != null) {
-      setState(() {
-        if (photosPath.isNotEmpty && photosPath.length >= imageIndex + 1) {
-          photosPath[imageIndex] = tempImage.path;
-        } else {
-          photosPath.add(tempImage.path);
-        }
-      });
-    }
-  }
-
-  openImageDialog({required String imagePath}) => showDialog(
-        context: context,
-        builder: (BuildContext context) => Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.file(File(imagePath)),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Fechar'),
-              )
-            ],
-          ),
-        ),
-      );
 }

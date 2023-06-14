@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/home/home_page.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
-import 'package:projeto_integrador3/src/review/review_form.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -16,13 +15,15 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   initState() {
+    //ele tem que checar por uma emergencia ongoing e redirecionar para tela
+    // Emergency.getEmergencyId().then((value) => print(value));
     super.initState();
     Emergency.wipeEmergencyData();
     // await authentication.getAuth();
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ReviewForm()),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     });
   }

@@ -14,7 +14,7 @@ class EmergencyViewModel {
 
   Future<Object?> checkOngoingEmergency() async {
     try {
-      final userData = await Authentication.retrieveLocalInfo();
+      final userData = await Authentication.getLocalInfo();
       final ongoingEmergency = await FirebaseFirestore.instance
           .collection('emergencies')
           .where('rescuerUid', isEqualTo: userData['rescuerUid'])
@@ -31,7 +31,7 @@ class EmergencyViewModel {
   Future<DocumentSnapshot<Object?>> createEmergencyDraft(
       String name, String phone) async {
 
-    final userData = await Authentication.retrieveLocalInfo();
+    final userData = await Authentication.getLocalInfo();
 
     final location = await getPosition();
 
@@ -41,7 +41,7 @@ class EmergencyViewModel {
       'phoneNumber': phone,
       'status': 'drafting',
       'photos': [],
-      'location': GeoPoint(location.latitude, location.longitude),
+      'location': FieldValue.arrayUnion([location.latitude, location.longitude]),
       'createdAt': DateTime.now(),
     });
 

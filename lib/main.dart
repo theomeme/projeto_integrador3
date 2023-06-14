@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:projeto_integrador3/src/splash/splash_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:projeto_integrador3/src/time_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,9 +11,9 @@ Future<void> main() async {
   );
 
   runApp(
-    MaterialApp(
+    const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: TimerScreen(),
+      home: SplashPage(),
     ),
   );
 }

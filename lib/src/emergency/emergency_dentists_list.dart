@@ -1,29 +1,47 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:projeto_integrador3/database/FirebaseHelper.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_confirmation.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/responses_model.dart';
 
 class EmergencyDentistsList extends StatefulWidget {
-  const EmergencyDentistsList({super.key});
+  const EmergencyDentistsList({Key? key});
 
   @override
   State<EmergencyDentistsList> createState() => _EmergencyDentistsListState();
 }
 
 class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
-  final userData = Authentication.retrieveLocalInfo();
+  Stream<List<DocumentSnapshot>> getAwaitResponseProfiles() async* {
+    await Future.delayed(const Duration(seconds: 2));
+    String? emergencyId = await Emergency.getEmergencyId();
+
+    if (emergencyId != null) {
+      yield* FirebaseFirestore.instance
+          .collection('responses')
+          .where("status", isEqualTo: "waiting")
+          .where("rescuerUid", isEqualTo: emergencyId)
+          .snapshots()
+          .asyncMap((snapshot) => Future.wait(snapshot.docs.map((doc) =>
+              FirebaseFirestore.instance
+                  .collection('profiles')
+                  .doc(doc['professionalUid'] as String)
+                  .get())));
+    }
+  }
 
   String? emergencyId;
 
-  final Stream<QuerySnapshot> _responsesStream = Responses.getResponsesStream();
-
   @override
-  initState() {
-    Emergency.getEmergencyId().then((value) {
-      emergencyId = value;
-    });
+  void initState() {
     super.initState();
+    Emergency.getEmergencyId().then((value) {
+      setState(() {
+        emergencyId = value;
+      });
+    });
   }
 
   @override
@@ -42,54 +60,45 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
         ),
         child: Container(
           margin: const EdgeInsets.all(20),
-          child: StreamBuilder(
-            stream: _responsesStream,
+          child: StreamBuilder<List<DocumentSnapshot>>(
+            stream: getAwaitResponseProfiles(),
             builder: (context, snapshot) {
+              // if (snapshot.connectionState == ConnectionState.waiting) {
+              //   return const Center(child: Text("Carregando"));
+              // }
+
               if (snapshot.hasError) {
-                return const Text('Something went wrong');
+                return const Center(child: Text('Algo deu errado'));
               }
 
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Text("Loading");
-              }
+              List<DocumentSnapshot>? profileDocs = snapshot.data;
 
-              var docs = snapshot.data!.docs;
+              if (profileDocs == null || profileDocs.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Nenhum dentista foi encontrado até o momento',
+                  ),
+                );
+              }
 
               return ListView.builder(
-                itemCount: docs.length,
+                itemCount: profileDocs.length,
                 itemBuilder: (context, index) {
-                  if (docs[index]["rescuerUid"] == emergencyId) {
-                    return SizedBox(
-                      height: 400,
-                      child: ListTile(
-                        leading: const Icon(Icons.person),
-                        title: Text(docs[index].get("professionalName")),
-                        subtitle: const Text("13.6 km de você"),
-                        trailing: TextButton(
-                          onPressed: () {
-                            openProfessionalDialog(
-                              professionalUid:
-                                  docs[index].get("professionalUid"),
-                              distance: 13.6,
-                              responseId: docs[index].id,
-                            );
-                          },
-                          child: const Text(
-                            "Ver mais",
-                            softWrap: true,
-                          ),
-                        ),
-                      ),
-                    );
-                  } else if (docs.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Nenhum dentista foi encontrado até o momento',
-                      ),
-                    );
-                  } else {
-                    return null;
-                  }
+                  DocumentSnapshot profileDoc = profileDocs[index];
+                  String professionalId = profileDoc.id;
+                  String name = profileDoc['name'] as String;
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 8.0),
+                    // Define o espaçamento inferior
+                    child: ListTile(
+                      leading: const Icon(Icons.person),
+                      title: Text(name),
+                      onTap: () {
+                        _showConfirmationDialog(name, professionalId);
+                      },
+                    ),
+                  );
                 },
               );
             },
@@ -99,82 +108,96 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
     );
   }
 
-  openProfessionalDialog({
-    required String professionalUid,
-    required double distance,
-    required String responseId,
-  }) async {
-    await FirebaseFirestore.instance
-        .collection('profiles')
+  void _showConfirmationDialog(String name, String professionalUid) {
+    double distance = 0.0;
+
+    FirebaseHelper.getFirestore()
+        .collection("profiles")
         .doc(professionalUid)
+        .collection("addresses")
+        .where("primary", isEqualTo: true)
         .get()
         .then(
-      (professionalValue) async {
-        await FirebaseFirestore.instance
-            .collection('profiles')
-            .doc(professionalUid)
-            .collection('addresses')
-            .where("primary", isEqualTo: true)
+      (addressProfessional) {
+        FirebaseHelper.getFirestore()
+            .collection("emergencies")
+            .doc(emergencyId!)
             .get()
             .then(
-          (professionalAddress) {
-            showDialog(
-              context: context,
-              useSafeArea: true,
-              builder: (BuildContext context) => Dialog.fullscreen(
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: Colors.redAccent,
-                      secondary: Colors.black54,
-                    ),
-                  ),
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Informações do dentista'),
-                      centerTitle: true,
-                    ),
-                    body: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Image.network(professionalValue["urlImg"]),
-                        Text(professionalValue["name"].toString()),
-                        Text("CRO ${professionalValue["cro"].toString()}"),
-                        Text(
-                            "${professionalAddress.docs[0]["street"]}, ${professionalAddress.docs[0]["neighborhood"]}, ${professionalAddress.docs[0]["city"]} - ${professionalAddress.docs[0]["state"]} - CEP ${professionalAddress.docs[0]["zipeCode"]}"),
-                        Text("$distance km de você"),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                Responses.rejectProfessional(
-                                    responseId: responseId);
-                              },
-                              child: const Text('Recusar'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Responses.acceptProfessional(
-                                    emergencyId: emergencyId!,
-                                    professionalUid:
-                                        professionalValue["authUid"]);
-                              },
-                              child: const Text(
-                                'Aceitar',
-                                style: TextStyle(
-                                  color: Colors.green,
+          (emergency) {
+            FirebaseHelper.getFirestore()
+                .collection("responses")
+                .where("rescuerUid", isEqualTo: emergencyId!)
+                .where("professionalUid", isEqualTo: professionalUid)
+                .limit(1)
+                .get()
+                .then(
+              (response) {
+                setState(() {
+                  distance = Geolocator.distanceBetween(
+                        addressProfessional.docs.first["lat"],
+                        addressProfessional.docs.first["lng"],
+                        emergency["location"][0],
+                        emergency["location"][1],
+                      ) /
+                      1000;
+                });
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Confirmação'),
+                      content: Text(
+                          'Você tem certeza de que deseja escolher o médico $name? Ele está a uma distância de ${distance.toStringAsFixed(1)}km de você.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.black45),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Responses.rejectProfessional(
+                                rescuerUid: emergencyId!,
+                                professionalUid: professionalUid);
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            'Recusar',
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Responses.acceptProfessional(
+                              emergencyId: emergencyId!,
+                              professionalUid: professionalUid,
+                            );
+                            Navigator.of(context).pop();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EmergencyConfirmation(
+                                  professionalUid: professionalUid,
+                                  responseId: response.docs.first.id,
                                 ),
                               ),
-                            )
-                          ],
-                        )
+                            );
+                          },
+                          child: const Text(
+                            'Aceitar',
+                            style: TextStyle(color: Colors.green),
+                          ),
+                        ),
                       ],
-                    ),
-                  ),
-                ),
-              ),
+                    );
+                  },
+                );
+              },
             );
           },
         );

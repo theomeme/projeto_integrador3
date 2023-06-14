@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:projeto_integrador3/database/FirebaseHelper.dart';
 
 class Responses {
   static Stream<QuerySnapshot> getResponsesStream() =>
@@ -24,17 +25,34 @@ class Responses {
     FirebaseFirestore.instance
         .collection("emergencies")
         .doc(emergencyId)
-        .update({"status": "onGoing"});
+        .update({"status": "waiting"});
   }
 
+  // static Future<void> rollbackAcceptance({
+  //   required String emergencyId,
+  //   required String responseId,
+  //   required String professionalUid,
+  // }) async {
+  //   FirebaseHelper.getFirestore().doc(responseId).update({
+  //     "status": "canceled"
+  //   })
+  // }
+
   static Future<void> rejectProfessional({
-    required String responseId
+    required String professionalUid,
+    required rescuerUid,
   }) async {
-    FirebaseFirestore.instance
+    await FirebaseHelper.getFirestore()
         .collection("responses")
-        .doc(responseId)
-        .update({
-      "status": "rejected"
+        .where("rescuerUid", isEqualTo: rescuerUid)
+        .where("professionalUid", isEqualTo: professionalUid)
+        .get()
+        .then((response) {
+        print(response.docs);
+      FirebaseHelper.getFirestore()
+          .collection("responses")
+          .doc(response.docs.first.id)
+          .update({"status": "rejected"});
     });
   }
 }
