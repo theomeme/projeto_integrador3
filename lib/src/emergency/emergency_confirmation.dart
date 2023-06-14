@@ -5,16 +5,19 @@ import 'package:projeto_integrador3/database/FirebaseHelper.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../review/review_form.dart';
+
 
 class EmergencyConfirmation extends StatefulWidget {
   final String professionalUid;
   final String responseId;
 
+
   const EmergencyConfirmation({
     required this.professionalUid,
     required this.responseId,
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   _EmergencyConfirmationState createState() => _EmergencyConfirmationState();
@@ -181,10 +184,21 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                   return Container();
                 },
               );
+            }else if (emergency?["status"] == "finished") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ReviewForm(
+                    professionalUid: widget.professionalUid,
+                    emergencyId: emergency?["rescuerUid"], // Use o ID do documento da emergência
+                  ),
+                ),
+              );
             } else {
               print('xabu status');
               return Container();
             }
+            return Container(); // Adicionado o retorno no final do método
           },
         ),
       ),

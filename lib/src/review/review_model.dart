@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Review {
   Future<void> rateProfessional(
       {required String professionalUid,
-      required emergencyId,
+        required String emergencyId,
       required double rating,
       required String review}) async {
     final DocumentSnapshot emergency = await FirebaseFirestore.instance
@@ -15,7 +15,7 @@ class Review {
         .collection("profiles")
         .doc(professionalUid)
         .collection("reviews")
-        .doc(emergencyId)
+        .doc(emergency.id)
         .set({
       "emergencyId": emergency.id,
       "name": emergency.get("name"),

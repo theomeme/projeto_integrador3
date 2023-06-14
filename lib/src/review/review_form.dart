@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:projeto_integrador3/src/review/review_model.dart';
 
 class ReviewForm extends StatefulWidget {
-  const ReviewForm({super.key});
+  final String professionalUid;
+  final String emergencyId;
+
+  const ReviewForm({
+    required this.professionalUid,
+    required this.emergencyId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<ReviewForm> createState() => _ReviewFormState();
@@ -115,7 +123,21 @@ class _ReviewFormState extends State<ReviewForm> {
                 },
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  String professionalUid = widget.professionalUid;
+                  String emergencyId = widget.emergencyId;
+                  double rating = ratingProfessional;
+                  String review = _reviewController.text;
+
+                  Review().rateProfessional(
+                    professionalUid: professionalUid,
+                    emergencyId: emergencyId,
+                    rating: rating,
+                    review: review,
+                  );
+
+                  // Aqui você pode adicionar lógica adicional, como exibir uma mensagem de sucesso, retornar para a tela anterior, etc.
+                },
                 child: const Text(
                   "Avaliar",
                   style: TextStyle(
