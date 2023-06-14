@@ -49,6 +49,7 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   flutter_countdown_timer: ^4.1.0
   cloud_functions: ^4.3.3
+  url_launcher: ^6.1.11
 
 dev_dependencies:
   flutter_test:

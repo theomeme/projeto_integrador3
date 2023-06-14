@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:projeto_integrador3/database/FirebaseHelper.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_confirmation.dart';
@@ -25,10 +26,10 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
           .where("rescuerUid", isEqualTo: emergencyId)
           .snapshots()
           .asyncMap((snapshot) => Future.wait(snapshot.docs.map((doc) =>
-              FirebaseFirestore.instance
-                  .collection('profiles')
-                  .doc(doc['professionalUid'] as String)
-                  .get())));
+          FirebaseFirestore.instance
+              .collection('profiles')
+              .doc(doc['professionalUid'] as String)
+              .get())));
     }
   }
 
@@ -63,10 +64,6 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
           child: StreamBuilder<List<DocumentSnapshot>>(
             stream: getAwaitResponseProfiles(),
             builder: (context, snapshot) {
-              // if (snapshot.connectionState == ConnectionState.waiting) {
-              //   return const Center(child: Text("Carregando"));
-              // }
-
               if (snapshot.hasError) {
                 return const Center(child: Text('Algo deu errado'));
               }
@@ -87,13 +84,47 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
                   DocumentSnapshot profileDoc = profileDocs[index];
                   String professionalId = profileDoc.id;
                   String name = profileDoc['name'] as String;
+                  double rating = profileDoc['rating'] as double;
 
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 8.0),
-                    // Define o espaçamento inferior
+                  return Card(
+                    elevation: 2,
                     child: ListTile(
                       leading: const Icon(Icons.person),
                       title: Text(name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RatingBar.builder(
+                            initialRating: rating,
+                            minRating: 1,
+                            direction: Axis.horizontal,
+                            allowHalfRating: true,
+                            itemCount: 5,
+                            itemSize: 20,
+                            itemBuilder: (context, _) => const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                            ),
+                            onRatingUpdate: (rating) {
+                              // Update the rating value
+                            },
+                          ),
+                          FutureBuilder<double>(
+                            future: _calculateDistance(professionalId),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                double distance = snapshot.data!;
+                                return Text(
+                                    'Distância: ${distance.toStringAsFixed(1)}km');
+                              } else if (snapshot.hasError) {
+                                return const Text('Erro ao obter a distância');
+                              } else {
+                                return const SizedBox();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                       onTap: () {
                         _showConfirmationDialog(name, professionalId);
                       },
@@ -108,6 +139,30 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
     );
   }
 
+  Future<double> _calculateDistance(String professionalId) async {
+    Position currentPosition = await Geolocator.getCurrentPosition();
+    DocumentSnapshot addressSnapshot =
+    await FirebaseHelper.getFirestore()
+        .collection("profiles")
+        .doc(professionalId)
+        .collection("addresses")
+        .where("primary", isEqualTo: true)
+        .get()
+        .then((snapshot) => snapshot.docs.first);
+
+    double professionalLat = addressSnapshot['lat'] as double;
+    double professionalLng = addressSnapshot['lng'] as double;
+
+    double distance = Geolocator.distanceBetween(
+        currentPosition.latitude,
+        currentPosition.longitude,
+        professionalLat,
+        professionalLng) /
+        1000;
+
+    return distance;
+  }
+
   void _showConfirmationDialog(String name, String professionalUid) {
     double distance = 0.0;
 
@@ -118,13 +173,13 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
         .where("primary", isEqualTo: true)
         .get()
         .then(
-      (addressProfessional) {
+          (addressProfessional) {
         FirebaseHelper.getFirestore()
             .collection("emergencies")
             .doc(emergencyId!)
             .get()
             .then(
-          (emergency) {
+              (emergency) {
             FirebaseHelper.getFirestore()
                 .collection("responses")
                 .where("rescuerUid", isEqualTo: emergencyId!)
@@ -132,14 +187,13 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
                 .limit(1)
                 .get()
                 .then(
-              (response) {
+                  (response) {
                 setState(() {
                   distance = Geolocator.distanceBetween(
-                        addressProfessional.docs.first["lat"],
-                        addressProfessional.docs.first["lng"],
-                        emergency["location"][0],
-                        emergency["location"][1],
-                      ) /
+                      addressProfessional.docs.first["lat"],
+                      addressProfessional.docs.first["lng"],
+                      emergency["location"][0],
+                      emergency["location"][1]) /
                       1000;
                 });
                 showDialog(

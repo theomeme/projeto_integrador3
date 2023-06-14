@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:projeto_integrador3/database/FirebaseHelper.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class EmergencyConfirmation extends StatefulWidget {
   final String professionalUid;
@@ -73,7 +75,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                   const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                        "Não se preocupe, o dentista vai entrar em contato com voce por telefone dentro de 1 minuto."),
+                        "Não se preocupe, o dentista vai entrar em contato com você por telefone dentro de 1 minuto."),
                   ),
                   CountdownTimer(
                     endTime: endTime,
@@ -93,9 +95,37 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                 builder: (context, snapshot) {
                   var response = snapshot.data;
 
-                  if (response?.get("willProfessionalMove") == 0) {
-                    print("not moving");
-                  } else if (response?.get("willProfessionalMove") == 1) {
+                  if (response?.get("willProfessionalMove") == -1) {
+                    return const Text(
+                      "Esperando a resposta do médico",
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w500),
+                    );
+                  } else if (response?.get("willProfessionalMove") == 0) {
+                 //   final String address = response?.get("professionalAddress") ?? "";
+
+                    return Column(
+                      children: [
+                        const Text(
+                          "O médico está na clínica",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Endereço: jg",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                           // launchMaps(address);
+                          },
+                          child: const Text("Ver no Mapa"),
+                        ),
+                      ],
+                    );
+                  }
+                  else if (response?.get("willProfessionalMove") == 1) {
                     print("moving");
                   } else {
                     print("xabu");
@@ -113,4 +143,17 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
       ),
     );
   }
+
+  void launchMaps(String address) async {
+    final url = 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeQueryComponent(address)}';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Não foi possível abrir o mapa';
+    }
+  }
+
+
+
+
 }
