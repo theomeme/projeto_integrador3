@@ -6,6 +6,8 @@ class Review {
         required String emergencyId,
       required double rating,
       required String review}) async {
+    //não está chegando o emergencyId ele vem do confirmation
+
     final DocumentSnapshot emergency = await FirebaseFirestore.instance
         .collection("emergencies")
         .doc(emergencyId)

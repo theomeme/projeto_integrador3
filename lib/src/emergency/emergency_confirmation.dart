@@ -7,15 +7,15 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../review/review_form.dart';
 
-
 class EmergencyConfirmation extends StatefulWidget {
-  final String professionalUid;
-  final String responseId;
+  final String? professionalUid;
+  final String? responseId;
+  final String? emergencyId;
 
-
-  const EmergencyConfirmation({
-    required this.professionalUid,
-    required this.responseId,
+  const EmergencyConfirmation(
+    this.professionalUid,
+    this.responseId,
+    this.emergencyId, {
     Key? key,
   }) : super(key: key);
 
@@ -24,13 +24,16 @@ class EmergencyConfirmation extends StatefulWidget {
 }
 
 class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
+  String? professionalUid;
+  String? responseId;
+
   final int endTime = DateTime.now().millisecondsSinceEpoch +
       20000; // Define o tempo inicial do temporizador (1 minuto)
 
   Future<Map<String, dynamic>> getProfessionalAddress() async {
     final querySnapshot = await FirebaseHelper.getFirestore()
         .collection("profiles")
-        .doc(widget.professionalUid)
+        .doc(widget.professionalUid ?? professionalUid)
         .collection("addresses")
         .where("primary", isEqualTo: true)
         .get();
@@ -57,13 +60,8 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
   Stream<DocumentSnapshot> getResponseSnapshot() async* {
     yield* FirebaseHelper.getFirestore()
         .collection("responses")
-        .doc(widget.responseId)
+        .doc(widget.responseId ?? responseId)
         .snapshots();
-  }
-
-  @override
-  void initState() {
-    super.initState();
   }
 
   @override
@@ -111,14 +109,16 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
             } else if (emergency?["status"] == "onGoing") {
               return StreamBuilder(
                 stream: getResponseSnapshot(),
-                builder: (context, snapshot)  {
+                builder: (context, snapshot) {
                   var response = snapshot.data;
+
+                  print(response?.id);
 
                   if (response?.get("willProfessionalMove") == -1) {
                     return const Text(
                       "Esperando a resposta do médico",
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                     );
                   } else if (response?.get("willProfessionalMove") == 0) {
                     return FutureBuilder(
@@ -129,7 +129,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                           return const CircularProgressIndicator();
                         } else if (addressSnapshot.hasData) {
                           final Map<String, dynamic> addressData =
-                          addressSnapshot.data as Map<String, dynamic>;
+                              addressSnapshot.data as Map<String, dynamic>;
 
                           final String street = addressData["street"] ?? "";
                           final String number = addressData["number"] ?? "";
@@ -141,7 +141,8 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                             children: [
                               const Text(
                                 "O médico está na clínica",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.w500),
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -168,7 +169,8 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                       children: [
                         Text(
                           "O médico está a caminho!",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w500),
                         ),
                         SizedBox(height: 8),
                         Text(
@@ -184,12 +186,12 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                   return Container();
                 },
               );
-            }else if (emergency?["status"] == "finished") {
+            } else if (emergency?["status"] == "finished") {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ReviewForm(
-                    professionalUid: widget.professionalUid,
+                    professionalUid: widget.professionalUid ?? professionalUid!,
                     emergencyId: emergency?["rescuerUid"],
                   ),
                 ),
@@ -206,7 +208,8 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
   }
 
   void launchMaps(String address) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeQueryComponent(address)}';
+    final url =
+        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeQueryComponent(address)}';
     if (await canLaunch(url)) {
       await launch(url);
     } else {

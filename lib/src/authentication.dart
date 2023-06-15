@@ -14,9 +14,8 @@ class Authentication {
 
   static Future<void> setAuth() async {
     if (!isAuthenticated()) {
-      await FirebaseHelper.getAuth()
-          .signInAnonymously()
-          .then((credential) => Authentication()._saveAuthUid(rescuerUid: credential.user!.uid));
+      await FirebaseHelper.getAuth().signInAnonymously().then((credential) =>
+          Authentication()._saveAuthUid(rescuerUid: credential.user!.uid));
     }
   }
 
@@ -24,9 +23,20 @@ class Authentication {
       .getToken()
       .then((token) => Authentication()._saveFcmToken(fcmToken: token!));
 
+  static Future<void> wipeLocalInfo() async =>
+      await SharedPreferences.getInstance().then((prefs) async {
+        try {
+          await FirebaseHelper.getAuth().currentUser!.delete();
+        } catch (e) {
+
+        }
+        FirebaseHelper.getAuth().signOut();
+        prefs.remove("fcmToken");
+        prefs.remove("rescuerUid");
+      });
+
   static Future<Map> getLocalInfo() async {
-    final SharedPreferences preferences =
-    await SharedPreferences.getInstance();
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
 
     final rescuerUid = preferences.getString('rescuerUid');
     final fcmToken = preferences.getString('fcmToken');
@@ -38,5 +48,4 @@ class Authentication {
 
     return userInfo;
   }
-
 }

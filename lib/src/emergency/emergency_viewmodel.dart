@@ -129,9 +129,6 @@ class EmergencyViewModel {
     permission = await Geolocator.checkPermission();
 
     bool locationEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!locationEnabled) {
-      return Future.error('Por favor, habilite a localização no smartphone');
-    }
 
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -142,6 +139,10 @@ class EmergencyViewModel {
 
     if (permission == LocationPermission.deniedForever) {
       return Future.error('Você precisa autorizar o acesso à localização');
+    }
+
+    if (!locationEnabled) {
+      return Future.error('Por favor, habilite a localização no smartphone');
     }
 
     return await Geolocator.getCurrentPosition();

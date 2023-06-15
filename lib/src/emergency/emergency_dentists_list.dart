@@ -236,8 +236,9 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EmergencyConfirmation(
-                                  professionalUid: professionalUid,
-                                  responseId: response.docs.first.id,
+                                  professionalUid,
+                                  response.docs.first.id,
+                                  null,
                                 ),
                               ),
                             );
