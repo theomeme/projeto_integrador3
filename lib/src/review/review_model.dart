@@ -17,9 +17,9 @@ class Review {
         .collection("profiles")
         .doc(professionalUid)
         .collection("reviews")
-        .doc(emergency.id)
+        .doc(emergencyId)
         .set({
-      "emergencyId": emergency.id,
+      "emergencyId": emergencyId,
       "name": emergency.get("name"),
       "rating": rating,
       "review": review,
