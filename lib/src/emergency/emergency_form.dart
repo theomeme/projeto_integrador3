@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 
 import 'emergency_creating.dart';
 
@@ -26,8 +26,6 @@ class _EmergencyFormState extends State<EmergencyForm> {
   ImagePicker imagePicker = ImagePicker();
 
   List<String> photosPath = [];
-
-  final emergencyViewModel = EmergencyViewModel();
 
   DocumentSnapshot? emergencyRef;
 
@@ -459,7 +457,7 @@ class _EmergencyFormState extends State<EmergencyForm> {
               ),
               ElevatedButton(
                   onPressed: () async {
-                    await EmergencyViewModel()
+                    await Emergency
                         .getPosition(context)
                         .then((value) {
                       setState(() {

@@ -3,7 +3,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
-import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
 import 'package:projeto_integrador3/src/splash/splash_page.dart';
 
 import 'emergency_dentists_list.dart';
@@ -30,11 +29,9 @@ class _EmergencyCreatingState extends State<EmergencyCreating> {
   double uploadProgress = 0.0;
   String uploadLabel = '';
 
-  final emergencyViewModel = EmergencyViewModel();
-
   @override
   void initState() {
-    emergencyViewModel.makeEmergency(widget.emergencyPhotosPath, widget.name,
+    Emergency().makeEmergency(widget.emergencyPhotosPath, widget.name,
         widget.phoneNumber, widget.location, (value) {
       setState(() {
         uploadProgress = value;

@@ -141,9 +141,9 @@ class _ReviewFormState extends State<ReviewForm> {
               ElevatedButton(
                 onPressed: () {
                   String professionalUid = widget.professionalUid;
-                  String emergencyId = widget.emergencyId;
+                  String emergencyId = Authentication.getAuthUid()!;
                   double rating = ratingProfessional;
-                  String review = _reviewController.text;
+                  String review = _reviewController.text == '' ? 'Nenhum comentário adicionado.' : _reviewController.text;
 
                   Review().rateProfessional(
                     professionalUid: professionalUid,
@@ -152,7 +152,9 @@ class _ReviewFormState extends State<ReviewForm> {
                     review: review,
                   );
 
-                  signOutAndNavigateToInitial();
+                  Authentication.wipeLocalInfo();
+                  Emergency.wipeEmergencyData();
+                  navigateToInitial();
                 },
                 child: const Text(
                   "Avaliar",
@@ -168,9 +170,7 @@ class _ReviewFormState extends State<ReviewForm> {
     );
   }
 
-  void signOutAndNavigateToInitial() {
-    Authentication.wipeLocalInfo();
-    Emergency.wipeEmergencyData();
+  void navigateToInitial() {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const SplashPage()),

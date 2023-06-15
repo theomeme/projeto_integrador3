@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Authentication {
   static bool isAuthenticated() => FirebaseHelper.getAuth().currentUser != null;
+  static String? getAuthUid() => FirebaseHelper.getAuth().currentUser?.uid;
 
   Future<void> _saveAuthUid({required String rescuerUid}) async =>
       await SharedPreferences.getInstance()

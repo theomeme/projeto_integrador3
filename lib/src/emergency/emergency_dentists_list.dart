@@ -246,8 +246,8 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
                               emergencyId: emergencyId!,
                               professionalUid: professionalUid,
                             );
-                            Navigator.of(context).pop();
-                            Navigator.push(
+                            // Navigator.of(context).pop();
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EmergencyConfirmation(

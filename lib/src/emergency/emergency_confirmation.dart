@@ -77,18 +77,6 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Authentication.wipeLocalInfo();
-            Emergency.wipeEmergencyData();
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const SplashPage()),
-                  (Route<dynamic> route) => false,
-            );
-          },
-        ),
         backgroundColor: Colors.redAccent,
         centerTitle: true,
         title: const Text(
@@ -239,15 +227,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                   },
                 );
               } else if (emergency?["status"] == "finished") {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReviewForm(
-                      professionalUid: widget.professionalUid!,
-                      emergencyId: emergency!.id,
-                    ),
-                  ),
-                );
+                goToReview(emergency!.id);
               } else {
                 return const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -273,5 +253,17 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
     } else {
       throw 'Não foi possível abrir o mapa';
     }
+  }
+
+  void goToReview(String emergency) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReviewForm(
+          professionalUid: widget.professionalUid!,
+          emergencyId: emergency,
+        ),
+      ),
+    );
   }
 }
