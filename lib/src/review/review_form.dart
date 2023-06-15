@@ -1,9 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/review/review_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:projeto_integrador3/src/splash/splash_page.dart';
-
 
 class ReviewForm extends StatefulWidget {
   final String professionalUid;
@@ -36,6 +37,18 @@ class _ReviewFormState extends State<ReviewForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Authentication.wipeLocalInfo();
+            Emergency.wipeEmergencyData();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SplashPage()),
+              (Route<dynamic> route) => false,
+            );
+          },
+        ),
         title: const Text("Avalie atendimento"),
         centerTitle: true,
         backgroundColor: Colors.redAccent,
@@ -140,7 +153,6 @@ class _ReviewFormState extends State<ReviewForm> {
                   );
 
                   signOutAndNavigateToInitial();
-
                 },
                 child: const Text(
                   "Avaliar",
@@ -157,9 +169,12 @@ class _ReviewFormState extends State<ReviewForm> {
   }
 
   void signOutAndNavigateToInitial() {
-    FirebaseAuth.instance.signOut().then((value) {
-      Navigator.pop(context);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SplashPage()));
-    });
+    Authentication.wipeLocalInfo();
+    Emergency.wipeEmergencyData();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const SplashPage()),
+          (Route<dynamic> route) => false,
+    );
   }
 }

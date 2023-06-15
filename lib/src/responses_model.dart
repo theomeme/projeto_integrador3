@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:projeto_integrador3/database/FirebaseHelper.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
 
 class Responses {
   static Stream<QuerySnapshot> getResponsesStream() =>
@@ -48,11 +49,26 @@ class Responses {
         .where("professionalUid", isEqualTo: professionalUid)
         .get()
         .then((response) {
-        print(response.docs);
       FirebaseHelper.getFirestore()
           .collection("responses")
           .doc(response.docs.first.id)
           .update({"status": "rejected"});
     });
   }
+
+  static void cancelOtherResponsesNotChosen() async =>
+      Authentication.getLocalInfo().then((value) {
+        FirebaseHelper.getFirestore()
+            .collection("responses")
+            .where("rescuerUid", isEqualTo: value["rescuerUid"])
+            .where("status", isNotEqualTo: "onGoing").get()
+            .then((responses) {
+          for (var response in responses.docs) {
+            FirebaseHelper.getFirestore().collection("responses").doc(
+                response.id).update({
+              "status": "rejected",
+            });
+          }
+        });
+      });
 }

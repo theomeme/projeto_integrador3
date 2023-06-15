@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
+import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
+import 'package:projeto_integrador3/src/splash/splash_page.dart';
 
 import 'emergency_dentists_list.dart';
 
@@ -55,6 +58,18 @@ class _EmergencyCreatingState extends State<EmergencyCreating> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Authentication.wipeLocalInfo();
+            Emergency.wipeEmergencyData();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SplashPage()),
+                  (Route<dynamic> route) => false,
+            );
+          },
+        ),
         title: const Text('Abrindo chamado'),
         centerTitle: true,
         backgroundColor: Colors.redAccent,

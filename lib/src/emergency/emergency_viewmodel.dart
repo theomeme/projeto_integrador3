@@ -24,7 +24,6 @@ class EmergencyViewModel {
           .catchError((e) => e);
       return ongoingEmergency;
     } catch (e) {
-      print(e);
       return e;
     }
   }
@@ -71,8 +70,6 @@ class EmergencyViewModel {
       'accidentDocument'
     ];
 
-    print(imagesPath);
-
     for (var image in imagesPath) {
       String temporaryPath = "/data/user/0/com.example.projeto_integrador3/cache/tmpPathCompressedImage.jpg";
 
@@ -103,10 +100,8 @@ class EmergencyViewModel {
                 taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
             break;
           case TaskState.paused:
-            print("Upload is paused.");
             break;
           case TaskState.canceled:
-            print("Upload was canceled");
             break;
           case TaskState.error:
             // Handle unsuccessful uploads

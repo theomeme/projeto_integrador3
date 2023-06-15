@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:projeto_integrador3/database/FirebaseHelper.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_confirmation.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
 import 'package:projeto_integrador3/src/responses_model.dart';
+import 'package:projeto_integrador3/src/splash/splash_page.dart';
 
 class EmergencyDentistsList extends StatefulWidget {
   const EmergencyDentistsList({Key? key});
@@ -49,6 +51,18 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Authentication.wipeLocalInfo();
+            Emergency.wipeEmergencyData();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SplashPage()),
+                  (Route<dynamic> route) => false,
+            );
+          },
+        ),
         title: const Text("Dentistas disponíveis"),
         backgroundColor: Colors.redAccent,
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_integrador3/database/FirebaseHelper.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_form.dart';
 
 class HomePage extends StatefulWidget {

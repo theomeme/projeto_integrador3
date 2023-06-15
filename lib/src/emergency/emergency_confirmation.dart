@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_countdown_timer/countdown_timer_controller.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:projeto_integrador3/database/FirebaseHelper.dart';
+import 'package:projeto_integrador3/src/authentication.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
+import 'package:projeto_integrador3/src/responses_model.dart';
+import 'package:projeto_integrador3/src/splash/splash_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../review/review_form.dart';
@@ -24,10 +28,10 @@ class EmergencyConfirmation extends StatefulWidget {
 }
 
 class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
-  String _title = "Confirmando atendimento";
-
   final int endTime = DateTime.now().millisecondsSinceEpoch +
-      20000; // Define o tempo inicial do temporizador (1 minuto)
+      60000; // Define o tempo inicial do temporizador (1 minuto)
+  
+  late CountdownTimerController controller;
 
   Future<Map<String, dynamic>> getProfessionalAddress() async {
     final querySnapshot = await FirebaseHelper.getFirestore()
@@ -39,7 +43,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
 
     if (querySnapshot.docs.isNotEmpty) {
       final snapshot = querySnapshot.docs.first;
-      return snapshot.data() as Map<String, dynamic>;
+      return snapshot.data();
     } else {
       throw Exception("Endereço primário não encontrado para o médico");
     }
@@ -62,15 +66,33 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
         .doc(widget.responseId)
         .snapshots();
   }
+  
+  @override
+  void initState() {
+    controller = CountdownTimerController(endTime: endTime);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Authentication.wipeLocalInfo();
+            Emergency.wipeEmergencyData();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SplashPage()),
+                  (Route<dynamic> route) => false,
+            );
+          },
+        ),
         backgroundColor: Colors.redAccent,
         centerTitle: true,
-        title: Text(
-          _title,
+        title: const Text(
+          "Atendimento",
         ),
       ),
       body: Theme(
@@ -102,24 +124,28 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                           "Não se preocupe, o dentista vai entrar em contato com você por telefone dentro de 1 minuto."),
                     ),
                     CountdownTimer(
-                      endTime: endTime,
                       textStyle: const TextStyle(fontSize: 32),
+                      controller: controller,
                       onEnd: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(builder: (context) => const SplashPage()),
-                        // );
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'O dentista escolhido demorou a responder. Escolha outro dentista.'),
+                          ),
+                        );
                       },
                     ),
                   ],
                 );
               } else if (emergency?["status"] == "onGoing") {
+                Responses.cancelOtherResponsesNotChosen();
+                controller.disposeTimer();
+
                 return StreamBuilder(
                   stream: getResponseSnapshot(),
                   builder: (context, snapshot) {
                     var response = snapshot.data;
-
-                    print(response?.id);
 
                     if (response?.get("willProfessionalMove") == -1) {
                       return const Center(
@@ -137,7 +163,9 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                         builder: (context, addressSnapshot) {
                           if (addressSnapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           } else if (addressSnapshot.hasData) {
                             final Map<String, dynamic> addressData =
                                 addressSnapshot.data as Map<String, dynamic>;
@@ -147,10 +175,6 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                             final String city = addressData["city"] ?? "";
 
                             final String fullAddress = "$street $number, $city";
-
-                            setState(() {
-                              _title = "Localização confirmada";
-                            });
 
                             return Center(
                               child: Column(
@@ -167,7 +191,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                                   const SizedBox(height: 8),
                                   Text(
                                     "Endereço: $fullAddress",
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   const SizedBox(height: 16),
                                   ElevatedButton(
@@ -180,10 +204,6 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                               ),
                             );
                           } else {
-                            setState(() {
-                              _title = "Localização confirmada";
-                            });
-
                             return const Center(
                               child: Text(
                                 "Endereço não encontrado",
@@ -201,7 +221,9 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                             Text(
                               "O médico está a caminho!",
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w500),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             SizedBox(height: 8),
                             Text(
@@ -211,8 +233,6 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
                           ],
                         ),
                       );
-                    } else {
-                      print("xabu");
                     }
 
                     return Container();

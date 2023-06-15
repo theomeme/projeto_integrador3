@@ -51,7 +51,7 @@ class Emergency {
           return navigateToHome();
         }
 
-        getResponseAndProfessionalUid(rescuerUid: id!).then(
+        getResponseAndProfessionalUid(rescuerUid: id).then(
               (value) => goToOngoingEmergency([
             value.docs.first.get("professionalUid"),
             value.docs.first.id,
