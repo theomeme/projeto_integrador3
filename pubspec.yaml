@@ -50,6 +50,9 @@ dependencies:
   flutter_countdown_timer: ^4.1.0
   cloud_functions: ^4.3.3
   url_launcher: ^6.1.11
+  connectivity_plus: ^4.0.1
+  permission_handler: ^10.3.0
+  percent_indicator: ^4.2.3
 
 dev_dependencies:
   flutter_test:

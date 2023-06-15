@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:projeto_integrador3/src/authentication.dart';
-import 'package:projeto_integrador3/src/emergency/emergency_upload.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_viewmodel.dart';
+
+import 'emergency_creating.dart';
 
 class EmergencyForm extends StatefulWidget {
   const EmergencyForm({super.key});
@@ -29,6 +30,8 @@ class _EmergencyFormState extends State<EmergencyForm> {
   final emergencyViewModel = EmergencyViewModel();
 
   DocumentSnapshot? emergencyRef;
+
+  Position? location;
 
   final phoneMask = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -86,40 +89,31 @@ class _EmergencyFormState extends State<EmergencyForm> {
                         }
                         break;
                       case 1:
-                        if (_formKey.currentState!.validate()) {
-                          if (Authentication.isAuthenticated()) {
-                            if (emergencyRef == null) {
-                              emergencyRef =
-                                  await emergencyViewModel.createEmergencyDraft(
-                                      _nameController.text,
-                                      phoneMask.getUnmaskedText());
-                              setState(() {
-                                _index += 1;
-                              });
-                            } else {
-                              setState(() {
-                                _index += 1;
-                              });
-                            }
-                          } else {
-                            Authentication.setAuth();
-                            emergencyRef =
-                                await emergencyViewModel.createEmergencyDraft(
-                                    _nameController.text,
-                                    phoneMask.getUnmaskedText());
-                            setState(() {
-                              _index += 1;
-                            });
-                          }
+                        if (_formKey.currentState!.validate() &&
+                            location != null) {
+                          setState(() {
+                            _index += 1;
+                          });
+                        } else if (location == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Adicione a sua localização antes de prosseguir.',
+                              ),
+                            ),
+                          );
                         }
                         break;
                       case 2:
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => EmergencyUpload(
-                                emergencyPhotosPath: photosPath,
-                                emergencyRef: emergencyRef!),
+                            builder: (context) => EmergencyCreating(
+                              name: _nameController.text,
+                              phoneNumber: phoneMask.getUnmaskedText(),
+                              location: location!,
+                              emergencyPhotosPath: photosPath,
+                            ),
                           ),
                         );
                         break;
@@ -462,7 +456,27 @@ class _EmergencyFormState extends State<EmergencyForm> {
                     ),
                   ],
                 ),
-              )
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    await EmergencyViewModel()
+                        .getPosition(context)
+                        .then((value) {
+                      setState(() {
+                        location = value;
+                      });
+                    });
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.location_on_sharp),
+                      const Padding(padding: EdgeInsets.all(7)),
+                      Text(location == null
+                          ? "Adicionar localização"
+                          : "Localização adicionada"),
+                    ],
+                  ))
             ],
           ),
         ),

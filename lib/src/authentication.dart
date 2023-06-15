@@ -35,7 +35,7 @@ class Authentication {
         prefs.remove("rescuerUid");
       });
 
-  static Future<Map> getLocalInfo() async {
+  static Future<Map<String, String>> getLocalInfo() async {
     final SharedPreferences preferences = await SharedPreferences.getInstance();
 
     final rescuerUid = preferences.getString('rescuerUid');

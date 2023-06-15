@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:projeto_integrador3/src/review/review_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:projeto_integrador3/src/splash/splash_page.dart';
 
 
 class ReviewForm extends StatefulWidget {
@@ -155,12 +156,10 @@ class _ReviewFormState extends State<ReviewForm> {
     );
   }
 
-  Future<void> signOutAndNavigateToInitial() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/', // Defina o nome da rota inicial do seu aplicativo
-          (_) => false, // Impede que o usuário volte para esta tela ao pressionar o botão "Voltar"
-    );
+  void signOutAndNavigateToInitial() {
+    FirebaseAuth.instance.signOut().then((value) {
+      Navigator.pop(context);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SplashPage()));
+    });
   }
 }

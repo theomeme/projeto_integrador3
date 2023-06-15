@@ -24,8 +24,7 @@ class EmergencyConfirmation extends StatefulWidget {
 }
 
 class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
-  String? professionalUid;
-  String? responseId;
+  String _title = "Confirmando atendimento";
 
   final int endTime = DateTime.now().millisecondsSinceEpoch +
       20000; // Define o tempo inicial do temporizador (1 minuto)
@@ -33,7 +32,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
   Future<Map<String, dynamic>> getProfessionalAddress() async {
     final querySnapshot = await FirebaseHelper.getFirestore()
         .collection("profiles")
-        .doc(widget.professionalUid ?? professionalUid)
+        .doc(widget.professionalUid)
         .collection("addresses")
         .where("primary", isEqualTo: true)
         .get();
@@ -60,7 +59,7 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
   Stream<DocumentSnapshot> getResponseSnapshot() async* {
     yield* FirebaseHelper.getFirestore()
         .collection("responses")
-        .doc(widget.responseId ?? responseId)
+        .doc(widget.responseId)
         .snapshots();
   }
 
@@ -70,138 +69,177 @@ class _EmergencyConfirmationState extends State<EmergencyConfirmation> {
       appBar: AppBar(
         backgroundColor: Colors.redAccent,
         centerTitle: true,
-        title: const Text(
-          'Confirmação',
+        title: Text(
+          _title,
         ),
       ),
-      body: Container(
-        margin: const EdgeInsets.all(20),
-        child: StreamBuilder(
-          stream: getEmergencySnapshot(),
-          builder: (context, snapshot) {
-            DocumentSnapshot? emergency = snapshot.data;
+      body: Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.redAccent,
+            secondary: Colors.black54,
+          ),
+        ),
+        child: Container(
+          margin: const EdgeInsets.all(20),
+          child: StreamBuilder(
+            stream: getEmergencySnapshot(),
+            builder: (context, snapshot) {
+              DocumentSnapshot? emergency = snapshot.data;
 
-            if (emergency?["status"] == "waiting") {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Aguarde o dentista entrar em contato",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                        "Não se preocupe, o dentista vai entrar em contato com você por telefone dentro de 1 minuto."),
-                  ),
-                  CountdownTimer(
-                    endTime: endTime,
-                    textStyle: const TextStyle(fontSize: 32),
-                    onEnd: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => const SplashPage()),
-                      // );
-                    },
-                  ),
-                ],
-              );
-            } else if (emergency?["status"] == "onGoing") {
-              return StreamBuilder(
-                stream: getResponseSnapshot(),
-                builder: (context, snapshot) {
-                  var response = snapshot.data;
-
-                  print(response?.id);
-
-                  if (response?.get("willProfessionalMove") == -1) {
-                    return const Text(
-                      "Esperando a resposta do médico",
+              if (emergency?["status"] == "waiting") {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Aguarde o dentista entrar em contato",
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                    );
-                  } else if (response?.get("willProfessionalMove") == 0) {
-                    return FutureBuilder(
-                      future: getProfessionalAddress(),
-                      builder: (context, addressSnapshot) {
-                        if (addressSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else if (addressSnapshot.hasData) {
-                          final Map<String, dynamic> addressData =
-                              addressSnapshot.data as Map<String, dynamic>;
-
-                          final String street = addressData["street"] ?? "";
-                          final String number = addressData["number"] ?? "";
-                          final String city = addressData["city"] ?? "";
-
-                          final String fullAddress = "$street $number, $city";
-
-                          return Column(
-                            children: [
-                              const Text(
-                                "O médico está na clínica",
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Endereço: $fullAddress",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: () {
-                                  launchMaps(fullAddress);
-                                },
-                                child: const Text("Ver no Mapa"),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return const Text("Endereço não encontrado");
-                        }
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                          "Não se preocupe, o dentista vai entrar em contato com você por telefone dentro de 1 minuto."),
+                    ),
+                    CountdownTimer(
+                      endTime: endTime,
+                      textStyle: const TextStyle(fontSize: 32),
+                      onEnd: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(builder: (context) => const SplashPage()),
+                        // );
                       },
-                    );
-                  } else if (response?.get("willProfessionalMove") == 1) {
-                    return const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "O médico está a caminho!",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w500),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Ele logo estará no local para atendê-lo.",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    );
-                  } else {
-                    print("xabu");
-                  }
+                    ),
+                  ],
+                );
+              } else if (emergency?["status"] == "onGoing") {
+                return StreamBuilder(
+                  stream: getResponseSnapshot(),
+                  builder: (context, snapshot) {
+                    var response = snapshot.data;
 
-                  return Container();
-                },
-              );
-            } else if (emergency?["status"] == "finished") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReviewForm(
-                    professionalUid: widget.professionalUid ?? professionalUid!,
-                    emergencyId: emergency?["rescuerUid"],
+                    print(response?.id);
+
+                    if (response?.get("willProfessionalMove") == -1) {
+                      return const Center(
+                        child: Text(
+                          "Estamos esperando o dentista enviar ou solicitar localização",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    } else if (response?.get("willProfessionalMove") == 0) {
+                      return FutureBuilder(
+                        future: getProfessionalAddress(),
+                        builder: (context, addressSnapshot) {
+                          if (addressSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (addressSnapshot.hasData) {
+                            final Map<String, dynamic> addressData =
+                                addressSnapshot.data as Map<String, dynamic>;
+
+                            final String street = addressData["street"] ?? "";
+                            final String number = addressData["number"] ?? "";
+                            final String city = addressData["city"] ?? "";
+
+                            final String fullAddress = "$street $number, $city";
+
+                            setState(() {
+                              _title = "Localização confirmada";
+                            });
+
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "O dentista está esperando você na clínica",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Endereço: $fullAddress",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      launchMaps(fullAddress);
+                                    },
+                                    child: const Text("Ver no Mapa"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            setState(() {
+                              _title = "Localização confirmada";
+                            });
+
+                            return const Center(
+                              child: Text(
+                                "Endereço não encontrado",
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    } else if (response?.get("willProfessionalMove") == 1) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "O médico está a caminho!",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              "Ele logo estará no local para atendê-lo.",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      print("xabu");
+                    }
+
+                    return Container();
+                  },
+                );
+              } else if (emergency?["status"] == "finished") {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewForm(
+                      professionalUid: widget.professionalUid!,
+                      emergencyId: emergency!.id,
+                    ),
                   ),
-                ),
-              );
-            } else {
-              print('xabu status');
+                );
+              } else {
+                return const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text("Carregando informações"),
+                  ],
+                );
+              }
               return Container();
-            }
-            return Container();
-          },
+            },
+          ),
         ),
       ),
     );

@@ -34,32 +34,32 @@ class Emergency {
       return navigateToHome();
     }
 
-    try {
-      getEmergencyId().then((id) {
-        getEmergencyDoc(emergencyId: id).then((doc) async {
-          if (doc.get("status") != "onGoing") {
-            Authentication.wipeLocalInfo();
-            wipeEmergencyData();
-            Authentication.setAuth();
-            Authentication.setFCM();
-            return navigateToHome();
-          }
+    getEmergencyId().then((id) {
+      if (id == null) {
+        Authentication.wipeLocalInfo();
+        Authentication.setAuth();
+        Authentication.setFCM();
+        return navigateToHome();
+      }
 
-          getResponseAndProfessionalUid(rescuerUid: id!).then(
-            (value) => goToOngoingEmergency([
-              value.docs.first.get("professionalUid"),
-              value.docs.first.id,
-              id,
-            ]),
-          );
-        });
+      getEmergencyDoc(emergencyId: id).then((doc) async {
+        if (doc.get("status") != "onGoing") {
+          Authentication.wipeLocalInfo();
+          wipeEmergencyData();
+          Authentication.setAuth();
+          Authentication.setFCM();
+          return navigateToHome();
+        }
+
+        getResponseAndProfessionalUid(rescuerUid: id!).then(
+              (value) => goToOngoingEmergency([
+            value.docs.first.get("professionalUid"),
+            value.docs.first.id,
+            id,
+          ]),
+        );
       });
-    } catch (e) {
-      Authentication.wipeLocalInfo();
-      Authentication.setAuth();
-      Authentication.setFCM();
-      return navigateToHome();
-    }
+    });
   }
 
   static Future<QuerySnapshot> getResponseAndProfessionalUid({

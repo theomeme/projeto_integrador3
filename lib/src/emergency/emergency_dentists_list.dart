@@ -96,7 +96,8 @@ class _EmergencyDentistsListState extends State<EmergencyDentistsList> {
                         children: [
                           RatingBar.builder(
                             initialRating: rating,
-                            minRating: 1,
+                            ignoreGestures: true,
+                            minRating: 0,
                             direction: Axis.horizontal,
                             allowHalfRating: true,
                             itemCount: 5,

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:projeto_integrador3/src/authentication.dart';
 import 'package:projeto_integrador3/src/emergency/emergency_model.dart';
@@ -28,20 +29,21 @@ class EmergencyViewModel {
     }
   }
 
-  Future<DocumentSnapshot<Object?>> createEmergencyDraft(
-      String name, String phone) async {
-
+  Future<DocumentSnapshot<Object?>> createEmergency(
+    String name,
+    String phone,
+    Position location,
+  ) async {
     final userData = await Authentication.getLocalInfo();
-
-    final location = await getPosition();
 
     await emergencies.doc(userData['rescuerUid']).set({
       'rescuerUid': userData['rescuerUid'],
       'name': name,
       'phoneNumber': phone,
-      'status': 'drafting',
+      'status': 'waiting',
       'photos': [],
-      'location': FieldValue.arrayUnion([location.latitude, location.longitude]),
+      'location':
+          FieldValue.arrayUnion([location.latitude, location.longitude]),
       'createdAt': DateTime.now(),
     });
 
@@ -52,18 +54,35 @@ class EmergencyViewModel {
     return emergency;
   }
 
-  Future<void> uploadImages(List<String> imagesPath, DocumentSnapshot docRef,
-      ValueSetter uploadProgress, ValueSetter uploadLabel, VoidCallback goToList) async {
+  Future<void> makeEmergency(
+    List<String> imagesPath,
+    String name,
+    String phoneNumber,
+    Position location,
+    ValueSetter uploadProgress,
+    ValueSetter uploadLabel,
+    VoidCallback goToList,
+  ) async {
+    final rescuerInfo = await Authentication.getLocalInfo();
+
     final List<String> imagesName = [
       'accident',
       'document',
       'accidentDocument'
     ];
 
+    print(imagesPath);
+
+    for (var image in imagesPath) {
+      String temporaryPath = "/data/user/0/com.example.projeto_integrador3/cache/tmpPathCompressedImage.jpg";
+
+      await FlutterImageCompress.compressAndGetFile(image, temporaryPath, quality: 60).then((value) => image = temporaryPath);
+    }
+
     final List<String> fileImagesName = List<String>.generate(
         3,
         (index) =>
-            '${docRef.id}_${DateTime.now().millisecondsSinceEpoch}_${imagesName[index]}');
+            '${rescuerInfo["rescuerUid"]}_${DateTime.now().millisecondsSinceEpoch}_${imagesName[index]}');
 
     List<Reference> references = List<Reference>.generate(
         3,
@@ -97,33 +116,34 @@ class EmergencyViewModel {
         }
       });
       task.whenComplete(
-        () async => await task.snapshot.ref.getDownloadURL().then(
-          (value) {
-            emergencyImageDownloadUrl.add(value);
-            if (emergencyImageDownloadUrl.length == 3) {
-              addImagesToEmergency(emergencyImageDownloadUrl, docRef);
-              goToList();
-            }
-          },
-        ),
+        () async => await task.snapshot.ref.getDownloadURL().then((value) {
+          emergencyImageDownloadUrl.add(value);
+          if (emergencyImageDownloadUrl.length == 3) {
+            createEmergency(name, phoneNumber, location).then(
+              (value) {
+                addImagesToEmergency(emergencyImageDownloadUrl, value.id);
+                goToList();
+              },
+            );
+          }
+        }),
       );
     }
   }
 
   Future<void> addImagesToEmergency(
     List<String> images,
-    DocumentSnapshot emergencyRef,
+    String emergencyId,
   ) async {
     return FirebaseFirestore.instance
         .collection('emergencies')
-        .doc(emergencyRef.id)
+        .doc(emergencyId)
         .update({
       'photos': FieldValue.arrayUnion(images),
-      'status': 'waiting',
     });
   }
 
-  Future<Position> getPosition() async {
+  Future<Position> getPosition(context) async {
     LocationPermission permission;
 
     permission = await Geolocator.checkPermission();
@@ -133,15 +153,38 @@ class EmergencyViewModel {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Você precisa autorizar o acesso à localização para abrir um chamado.'),
+          ),
+        );
         return Future.error('Você precisa autorizar o acesso à localização');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'Você precisa autorizar o acesso à localização para abrir um chamado.'),
+          action: SnackBarAction(
+            label: "Abrir configurações",
+            onPressed: () {
+              Geolocator.openAppSettings();
+            },
+          ),
+        ),
+      );
       return Future.error('Você precisa autorizar o acesso à localização');
     }
 
     if (!locationEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ative a localização para prosseguir.'),
+        ),
+      );
       return Future.error('Por favor, habilite a localização no smartphone');
     }
 
